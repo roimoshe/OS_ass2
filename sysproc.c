@@ -97,7 +97,7 @@ sys_sigprocmask(void)
 {
   uint sigmask;
 
-  if(argint(0, &sigmask) < 0)
+  if(argint(0, (int *)&sigmask) < 0)
     return -1;
   return sigprocmask(sigmask);
 }
@@ -106,7 +106,7 @@ int
 sys_sigret(void)
 {
   sigret();
-  reeturn 0;
+  return 0;
 }
 
 int
@@ -117,9 +117,9 @@ sys_sigaction(void)
   struct sigaction *oldact
   if(argint(0, &signum) < 0)
     return -1;
-  if(argptr(1, &act, sizeof(sigaction)) < 0)
+  if(argptr(1, (char **)&act, sizeof(sigaction)) < 0)
     return -1;
-  if(argptr(2, &oldact, sizeof(sigaction)) < 0)
+  if(argptr(2, (char **)&oldact, sizeof(sigaction)) < 0)
     return -1;
-  return sigaction(sigmask, act, oldact);
+  return sigaction(signum, act, oldact);
 }
