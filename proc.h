@@ -1,5 +1,5 @@
-#define SIG DFL 0 /* default signal handling */
-#define SIG IGN 1 /* ignore signal */
+#define SIGDFL 0 /* default signal handling */
+#define SIGIGN 1 /* ignore signal */
 
 #define SIGKILL 9
 #define SIGSTOP 17
@@ -41,6 +41,11 @@ struct context {
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+struct sigaction {
+  void (*sa_handler)(int);
+  uint sigmask;
+};
+
 // Per-process state
 struct proc {
   uint sz;                     // Size of process memory (bytes)
@@ -58,7 +63,7 @@ struct proc {
   char name[16];               // Process name (debugging)
   uint pending_signals;
   uint signal_mask;
-  sigaction signal_handlers[32];
+  struct sigaction signal_handlers[32];
   struct trapframe *user_tf_backup;
 };
 
@@ -67,8 +72,3 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
-
-struct sigaction {
-  void (*sa_handler)(int);
-  uint sigmask;
-}

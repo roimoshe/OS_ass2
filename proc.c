@@ -566,6 +566,7 @@ uint
 sigprocmask(uint sigmask)
 {
   struct proc *curproc = myproc();
+  //TODO: return error(-1) if tring to mask unmasked signals(etc: kill..)
   uint old_sigmask = curproc->signal_mask;
   curproc->signal_mask = sigmask;
   return old_sigmask;
@@ -574,4 +575,56 @@ sigprocmask(uint sigmask)
 void sigret(void)
 {
   // TODOroi:complete
+}
+
+void handel_signum(int signum){
+  struct proc *p = myproc();
+  switch (signum)
+  {
+    case SIGSTOP:
+    p->state = RUNNABLE;
+    //TODO: check if need to call a CONT signnum or no
+    break;
+    case SIGCONT:
+    /* code */
+    break;
+    default:
+    // defualt is kill
+      acquire(&ptable.lock);
+      p->killed = 1;
+      if(p->state ==SLEEPING){
+        p->state= RUNNABLE;
+      }
+      release(&ptable.lock);
+      break;
+  }
+}
+
+void pending_signals_handler(void)
+{
+  struct proc *curproc = myproc();
+  uint pending_unmasked = curproc->pending_signals & ~curproc->signal_mask;
+  uint isBitSet;
+  void (*curr_sa_handler)(int);
+  uint curr_sigmask;
+  for (int i=0; i<32; i++) {
+    isBitSet = pending_unmasked & (1 << i);
+    if(isBitSet)
+    {
+      curr_sa_handler = curproc->signal_handlers[i].sa_handler;
+      curr_sigmask = curproc->signal_handlers[i].sigmask;
+      switch ((int)curr_sa_handler)
+      {
+      case SIGDFL:
+        handel_signum(i);
+        break;
+       case SIGIGN:
+        //do nothing
+        break;
+      default:
+        // using the handler func:
+        break;
+      }
+    }
+  }
 }
