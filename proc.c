@@ -104,7 +104,7 @@ found:
 
   p->pid = allocpid();
   for (int i = 0; i<32; i++){
-    p->signal_handlers[i].sa_handler = SIG_DFL;
+    p->signal_handlers[i].sa_handler = SIGDFL;
   }
   p->pending_signals = 0;
   p->signal_mask = 0;
@@ -519,7 +519,7 @@ kill(int pid, int signum)
     if(p->pid == pid){//TODOroi: maybe check the proc state
       p->pending_signals|=(1<<signum);
       release(&ptable.lock);
-      return 0
+      return 0;
     }
   }
   release(&ptable.lock);
@@ -602,13 +602,13 @@ void pending_signals_handler(void)
   uint pending_unmasked = curproc->pending_signals & ~curproc->signal_mask;
   uint isBitSet;
   void (*curr_sa_handler)(int);
-  uint curr_sigmask;
+  // uint curr_sigmask;
   for (int i=0; i<32; i++) {
     isBitSet = pending_unmasked & (1 << i);
     if(isBitSet)
     {
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
-      curr_sigmask = curproc->signal_handlers[i].sigmask;
+      // curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGDFL ){
         handle_kernel_level_signals(i);
       } else if ((int)curr_sa_handler != SIGIGN){
