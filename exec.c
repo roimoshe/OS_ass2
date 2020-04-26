@@ -99,6 +99,12 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  for (int i = 0; i<32; i++){
+    if(curproc->signal_handlers[i] != 1){
+      curproc->signal_handlers[i] = 0;
+    }
+  }
+  
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;

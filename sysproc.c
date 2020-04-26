@@ -29,11 +29,13 @@ sys_wait(void)
 int
 sys_kill(void)
 {
-  int pid;
+  int pid, signum;
 
   if(argint(0, &pid) < 0)
     return -1;
-  return kill(pid);
+  if(argint(0, &signum) < 0)
+    return -1;
+  return kill(pid, signum);
 }
 
 int
@@ -88,4 +90,21 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int
+sys_sigprocmask(void)
+{
+  uint sigmask;
+
+  if(argint(0, &sigmask) < 0)
+    return -1;
+  return sigprocmask(sigmask);
+}
+
+int
+sys_sigret(void)
+{
+  sigret();
+  reeturn 0;
 }
