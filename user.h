@@ -1,6 +1,6 @@
 #define null 0
-#define SIG DFL 0 /* default signal handling */
-#define SIG IGN 1 /* ignore signal */
+#define SIGDFL 0 /* default signal handling */
+#define SIGIGN 1 /* ignore signal */
 
 #define SIGKILL 9
 #define SIGSTOP 17
