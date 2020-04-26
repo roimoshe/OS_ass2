@@ -3,7 +3,7 @@
 #define SIGIGN 1 /* ignore signal */
 
 #define SIGKILL 9
-#define SIGSTOP 17
+#define SIGSTOP 17  
 #define SIGCONT 19
 
 struct stat;
