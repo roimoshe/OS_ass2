@@ -100,7 +100,7 @@ exec(char *path, char **argv)
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
   for (int i = 0; i<32; i++){
-    if( curproc->signal_handlers[i].sa_handler != SIGIGN ){
+    if( (int)curproc->signal_handlers[i].sa_handler != SIGIGN ){
       curproc->signal_handlers[i].sa_handler = SIGDFL;
     }
   }
