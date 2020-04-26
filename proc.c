@@ -104,7 +104,7 @@ found:
 
   p->pid = allocpid();
   for (int i = 0; i<32; i++){
-    p->signal_handlers[i] = 0;
+    p->signal_handlers[i].sa_handler = SIG_DFL;
   }
   p->pending_signals = 0;
   p->signal_mask = 0;
@@ -226,7 +226,8 @@ fork(void)
   *np->tf = *curproc->tf;
   
   for (int i = 0; i<32; i++){
-    np->signal_handlers[i] = curproc->signal_handlers[i];
+    np->signal_handlers[i].sa_handler = curproc->signal_handlers[i].sa_handler;
+    np->signal_handlers[i].sigmask = curproc->signal_handlers[i].sigmask;
   }
   np->signal_mask = curproc->signal_mask;
 
@@ -577,26 +578,21 @@ void sigret(void)
   // TODOroi:complete
 }
 
-void handel_signum(int signum){
+void handle_kernel_level_signals(int signum){
+  // TODO: handle case when cont & stop are set together
   struct proc *p = myproc();
-  switch (signum)
-  {
-    case SIGSTOP:
+  if(signum == SIGSTOP){
     p->state = RUNNABLE;
-    //TODO: check if need to call a CONT signnum or no
-    break;
-    case SIGCONT:
-    /* code */
-    break;
-    default:
-    // defualt is kill
-      acquire(&ptable.lock);
-      p->killed = 1;
-      if(p->state ==SLEEPING){
-        p->state= RUNNABLE;
-      }
-      release(&ptable.lock);
-      break;
+    while( !(myproc()->pending_signals & (1 << SIGCONT))){
+      yield();
+    }
+  } else if(signum != SIGCONT) {
+    acquire(&ptable.lock);
+    p->killed = 1;
+    if(p->state ==SLEEPING){
+      p->state= RUNNABLE;
+    }
+    release(&ptable.lock);
   }
 }
 
@@ -613,18 +609,25 @@ void pending_signals_handler(void)
     {
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
-      switch ((int)curr_sa_handler)
-      {
-      case SIGDFL:
-        handel_signum(i);
-        break;
-       case SIGIGN:
-        //do nothing
-        break;
-      default:
-        // using the handler func:
-        break;
+      if ( (int)curr_sa_handler == SIGDFL ){
+        handle_kernel_level_signals(i);
+      } else if ((int)curr_sa_handler != SIGIGN){
+        
       }
+      curproc->pending_signals&= ~(1<<i);
     }
   }
+}
+
+int sigaction( int signum, const struct sigaction *act, struct sigaction *oldact ){
+  struct sigaction *handler = &myproc()->signal_handlers[signum];
+  if( signum == SIGSTOP || signum == SIGCONT || signum == SIGKILL || signum < 0 || signum > 31 ){
+    oldact = null;
+    return -1;
+  }
+  oldact->sa_handler = handler->sa_handler;
+  oldact->sigmask = handler->sigmask;
+  handler->sa_handler = act->sa_handler;
+  handler->sigmask = act->sigmask;
+  return 0;
 }

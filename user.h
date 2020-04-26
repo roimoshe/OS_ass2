@@ -1,3 +1,4 @@
+#define null 0
 #define SIG DFL 0 /* default signal handling */
 #define SIG IGN 1 /* ignore signal */
 
@@ -36,6 +37,7 @@ int sleep(int);
 int uptime(void);
 uint sigprocmask(uint);
 void sigret(void);
+int  sigaction( int signum, const struct sigaction *act, struct sigaction *oldact );
 
 // ulib.c
 int stat(const char*, struct stat*);

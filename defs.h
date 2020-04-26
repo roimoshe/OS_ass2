@@ -10,7 +10,7 @@ struct sleeplock;
 struct stat;
 struct superblock;
 struct sigaction;
-
+#define null 0
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);
@@ -123,6 +123,7 @@ void            wakeup(void*);
 void            yield(void);
 uint            sigprocmask(uint sigmask);
 void            sigret(void);
+int             sigaction( int signum, const struct sigaction *act, struct sigaction *oldact );
 
 // swtch.S
 void            swtch(struct context**, struct context*);

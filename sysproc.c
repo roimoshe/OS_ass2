@@ -33,7 +33,7 @@ sys_kill(void)
 
   if(argint(0, &pid) < 0)
     return -1;
-  if(argint(0, &signum) < 0)
+  if(argint(1, &signum) < 0)
     return -1;
   return kill(pid, signum);
 }
@@ -107,4 +107,19 @@ sys_sigret(void)
 {
   sigret();
   reeturn 0;
+}
+
+int
+sys_sigaction(void)
+{
+  int signum;
+  const struct sigaction *act;
+  struct sigaction *oldact
+  if(argint(0, &signum) < 0)
+    return -1;
+  if(argptr(1, &act, sizeof(sigaction)) < 0)
+    return -1;
+  if(argptr(2, &oldact, sizeof(sigaction)) < 0)
+    return -1;
+  return sigaction(sigmask, act, oldact);
 }

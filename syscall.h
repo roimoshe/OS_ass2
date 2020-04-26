@@ -22,3 +22,4 @@
 #define SYS_close  21
 #define sigprocmask 22
 #define sigret 23
+#define sigaction 24
