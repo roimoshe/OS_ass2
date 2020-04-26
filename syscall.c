@@ -104,8 +104,8 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_sigprocmask(void);
-extern void sys_sigret(void);
-extern void sys_sigaction(void);
+extern int sys_sigret(void);
+extern int sys_sigaction(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
