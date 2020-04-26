@@ -114,7 +114,7 @@ sys_sigaction(void)
 {
   int signum;
   const struct sigaction *act;
-  struct sigaction *oldact
+  struct sigaction *oldact;
   if(argint(0, &signum) < 0)
     return -1;
   if(argptr(1, (char **)&act, sizeof(sigaction)) < 0)
