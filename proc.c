@@ -600,7 +600,7 @@ void handle_kernel_level_signals(int signum){
 void pending_signals_handler(void)
 {
   // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
-  if(myproc() == 0){
+  if(myproc() == 0){ //TODO: check this issue
     return;
   }
   struct proc *curproc = myproc();
@@ -616,11 +616,11 @@ void pending_signals_handler(void)
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGDFL ){
-        // handle_kernel_level_signals(i);
+        handle_kernel_level_signals(i);
       } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
         proc_sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
-        // handle_user_level_signals(i);
+        handle_user_level_signals(i);
         curproc->signal_mask = proc_sig_mask_backup;
       }
       curproc->pending_signals&= ~(1<<i);
