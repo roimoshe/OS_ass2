@@ -593,7 +593,7 @@ void handle_kernel_level_signals(int signum){
       yield();
     }
   } else if(signum != SIGCONT) {
-    exit(2);
+    exit();
   }
 }
 
@@ -618,7 +618,7 @@ void pending_signals_handler(void)
         proc_sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
         handle_user_level_signals(i);
-        curproc->signal_mask = proc_sig_mask_backup
+        curproc->signal_mask = proc_sig_mask_backup;
       }
       curproc->pending_signals&= ~(1<<i);
     }
