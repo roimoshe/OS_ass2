@@ -581,7 +581,7 @@ void sigret(void)
 // TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
   struct proc *p = myproc();
-  p->signal_handlers[signum].sa_handler();
+  p->signal_handlers[signum].sa_handler(signum);
 }
 
 void handle_kernel_level_signals(int signum){
