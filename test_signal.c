@@ -9,11 +9,13 @@ main(int argc, char *argv[])
   int number_of_iterations = 100000000;
   if (pid == 0){ //child
     for(int i = 0; i < number_of_iterations; i++){
-      printf(1, "%d, ", i);
+      printf(1, "child: %d\n", i);
     }
     exit();
-  } else{
-    for(int i = 0; i < number_of_iterations/2; i++);
+  } else{ //parent
+    for(int i = 0; i < number_of_iterations/2; i++){
+      printf(1, "parent: %d\n", i);
+    }
     kill(pid, SIGKILL);
   }
   exit();
