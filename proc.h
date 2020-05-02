@@ -65,6 +65,7 @@ struct proc {
   uint signal_mask;
   struct sigaction signal_handlers[32];
   struct trapframe *user_tf_backup;
+  uint sig_mask_backup;        // ProCess signal mask backup
 };
 
 // Process memory is laid out contiguously, low addresses first:

@@ -571,32 +571,34 @@ sigprocmask(uint sigmask)
 
 void sigret(void)
 {
-  asm("mov $0x18, %eax");
+  myproc()->signal_mask = myproc()->sig_mask_backup;
+  myproc()->tf = myproc()->user_tf_backup;
+}
+
+void sigret_func(void)
+{
+  asm("mov $0x17, %eax");
   asm("int $0x40");
 }
 
 // TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
   struct proc *p = myproc();
-      struct context context_for_user_space_sig_handler; //should be in alloc proc
+      ///struct context context_for_user_space_sig_handler; //should be in alloc proc
       //2.4:
-      memmove(p->user_tf_backup, p->tf, sizeof(struct trapframe));
-      uint *pre_eip = (uint*)p->tf->eip;
-      p->tf->eip = p->signal_handlers[signum].sa_handler;
+      memmove((void *)p->user_tf_backup, (void *)p->tf, sizeof(struct trapframe));
+      ///uint pre_eip = p->tf->eip;
+      p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
       p->tf->esp -= 4;//need to push 
-      memmove(p->tf->esp, &sigret, 16);
-      uint *sigret_add = p->tf->esp;
+      memmove((uint *)p->tf->esp, &sigret_func, 16);
+      uint *sigret_add = (uint *)p->tf->esp;
 
       p->tf->esp -= 1;
-      p->tf->esp = signum;
-
+      *(uint *)p->tf->esp = (uint)signum;
+      
+      p->tf->esp -= 1;
       *(uint *)p->tf->esp = (uint)sigret_add;
-      p->tf->esp = (uint)p->tf->esp;
-
-      ///backup_lernel_trap_frame();
-      ///switchuvm(p);
-      ///swtch(&(c->scheduler), &context_for_user_space_sig_handler);
-      ///switchkvm();    
+      p->tf->esp = (uint)p->tf->esp;  
 }
 
 void handle_kernel_level_signals(int signum){
@@ -608,7 +610,7 @@ void handle_kernel_level_signals(int signum){
       yield();
     }
   } else if(signum != SIGCONT) {
-    exit(2);
+    exit();
   }
 }
 
@@ -616,24 +618,23 @@ void pending_signals_handler(void)
 {
   // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
   struct proc *curproc = myproc();
-  uint pending_unmasked = curproc->pending_signals & ~curproc->signal_mask;
-  uint isBitSet;
+  if(curproc == 0)
+  {
+    return;
+  }
   void (*curr_sa_handler)(int);
-  uint proc_sig_mask_backup;
   uint curr_sigmask;
   for (int i=0; i<32; i++) {
-    isBitSet = pending_unmasked & (1 << i);
-    if(isBitSet)
+    if((curproc->pending_signals & ~curproc->signal_mask) & (1 << i))
     {
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGDFL ){
         handle_kernel_level_signals(i);
       } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
-        proc_sig_mask_backup = curproc->signal_mask;
+        curproc->sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
         handle_user_level_signals(i);
-        curproc->signal_mask = proc_sig_mask_backup;
       }
       curproc->pending_signals&= ~(1<<i);
     }
