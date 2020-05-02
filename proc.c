@@ -117,10 +117,6 @@ found:
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame.
-  sp -= sizeof *p->user_tf_backup;
-  p->user_tf_backup = (struct trapframe*)sp;
-
-  // Leave room for trap frame.
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
 
@@ -575,13 +571,32 @@ sigprocmask(uint sigmask)
 
 void sigret(void)
 {
-  // TODOroi:complete
+  asm("mov $0x18, %eax");
+  asm("int $0x40");
 }
 
 // TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
   struct proc *p = myproc();
-  p->signal_handlers[signum].sa_handler(signum);
+      struct context context_for_user_space_sig_handler; //should be in alloc proc
+      //2.4:
+      memmove(p->user_tf_backup, p->tf, sizeof(struct trapframe));
+      uint *pre_eip = (uint*)p->tf->eip;
+      p->tf->eip = p->signal_handlers[signum].sa_handler;
+      p->tf->esp -= 4;//need to push 
+      memmove(p->tf->esp, &sigret, 16);
+      uint *sigret_add = p->tf->esp;
+
+      p->tf->esp -= 1;
+      p->tf->esp = signum;
+
+      *(uint *)p->tf->esp = (uint)sigret_add;
+      p->tf->esp = (uint)p->tf->esp;
+
+      ///backup_lernel_trap_frame();
+      ///switchuvm(p);
+      ///swtch(&(c->scheduler), &context_for_user_space_sig_handler);
+      ///switchkvm();    
 }
 
 void handle_kernel_level_signals(int signum){
@@ -593,16 +608,13 @@ void handle_kernel_level_signals(int signum){
       yield();
     }
   } else if(signum != SIGCONT) {
-    exit();
+    exit(2);
   }
 }
 
 void pending_signals_handler(void)
 {
   // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
-  if(myproc() == 0){ //TODO: check this issue
-    return;
-  }
   struct proc *curproc = myproc();
   uint pending_unmasked = curproc->pending_signals & ~curproc->signal_mask;
   uint isBitSet;
