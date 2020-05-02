@@ -32,24 +32,3 @@ trapret:
   popl %ds
   addl $0x8, %esp  # trapno and errcode
   iret
-
-.global jmp_to_handler
-jmp_to_handler:
-  movl 4(%esp), %eax
-
-  pushl %ds
-  pushl %es
-  pushl %fs
-  pushl %gs
-  pushal
-
-  call %eax
-
-  popal
-  popl %gs
-  popl %fs
-  popl %es
-  popl %ds
-  addl $0x4, %esp
-  ret
-

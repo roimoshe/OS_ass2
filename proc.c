@@ -17,8 +17,6 @@ static struct proc *initproc;
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
-extern void jmp_to_handler(void (*sa_handler)(int));
-
 
 static void wakeup1(void *chan);
 
@@ -583,7 +581,7 @@ void sigret(void)
 // TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
   struct proc *p = myproc();
-  jmp_to_handler(p->signal_handlers[signum].sa_handler);
+  p->signal_handlers[signum].sa_handler();
 }
 
 void handle_kernel_level_signals(int signum){
@@ -619,7 +617,7 @@ void pending_signals_handler(void)
       } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
         proc_sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
-        handle_user_level_signals(i);
+        // handle_user_level_signals(i);
         curproc->signal_mask = proc_sig_mask_backup;
       }
       curproc->pending_signals&= ~(1<<i);
