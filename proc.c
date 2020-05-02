@@ -647,8 +647,10 @@ int sigaction( int signum, const struct sigaction *act, struct sigaction *oldact
     oldact = null;
     return -1;
   }
-  oldact->sa_handler = handler->sa_handler;
-  oldact->sigmask = handler->sigmask;
+  if (oldact != null){
+    oldact->sa_handler = handler->sa_handler;
+    oldact->sigmask = handler->sigmask;
+  }
   handler->sa_handler = act->sa_handler;
   handler->sigmask = act->sigmask;
   return 0;
