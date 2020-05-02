@@ -17,6 +17,8 @@ static struct proc *initproc;
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
+extern void jmp_to_handler(void (*sa_handler)(int));
+
 
 static void wakeup1(void *chan);
 
