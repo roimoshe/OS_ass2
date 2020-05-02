@@ -117,6 +117,10 @@ found:
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame.
+  sp -= sizeof *p->user_tf_backup;
+  p->user_tf_backup = (struct trapframe*)sp;
+
+  // Leave room for trap frame.
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
 
@@ -577,13 +581,7 @@ void sigret(void)
 // TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
   struct proc *p = myproc();
-      struct context context_for_user_space_sig_handler; //should be in alloc proc
-      context_for_user_space_sig_handler.eip = p->signal_handlers[signum].sa_handler;
-      backup_lernel_trap_frame();
-      switchuvm(p);
-      swtch(&(c->scheduler), &context_for_user_space_sig_handler);
-      switchkvm();
-      
+  jmp_to_handler(p->signal_handlers[signum].sa_handler);
 }
 
 void handle_kernel_level_signals(int signum){
