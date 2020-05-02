@@ -18,12 +18,12 @@ main(int argc, char *argv[])
   int number_of_iterations = 100;
   int pid = fork();
   if (pid == 0){ //child
-    while(keep_running)
+    while(keep_running){
       printf(1, "child is running\n");
     }
     printf(1, "child got signal no. : %d\n child exits\n", SIG_TEST);
     exit();
-  } else{ //parent
+  } else { //parent
     for(int i = 0; i < number_of_iterations/2; i++){
       printf(1, "parent: %d\n", i);
     }
