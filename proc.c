@@ -600,6 +600,7 @@ void handle_kernel_level_signals(int signum){
 void pending_signals_handler(void)
 {
   // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
+  return;
   struct proc *curproc = myproc();
   uint pending_unmasked = curproc->pending_signals & ~curproc->signal_mask;
   uint isBitSet;
