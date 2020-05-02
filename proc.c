@@ -120,10 +120,6 @@ found:
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
 
-  // Leave room for trap frame backup.
-  sp -= sizeof *p->user_tf_backup;
-  p->user_tf_backup = (struct trapframe*)sp;
-
   // Set up new context to start executing at forkret,
   // which returns to trapret.
   sp -= 4;
@@ -578,21 +574,28 @@ void sigret(void)
   // TODOroi:complete
 }
 
+// TODO: make sure after the handler execution it returns with sigret
+void handle_user_level_signals(int signum){
+  struct proc *p = myproc();
+      struct context context_for_user_space_sig_handler; //should be in alloc proc
+      context_for_user_space_sig_handler.eip = p->signal_handlers[signum].sa_handler;
+      backup_lernel_trap_frame();
+      switchuvm(p);
+      swtch(&(c->scheduler), &context_for_user_space_sig_handler);
+      switchkvm();
+      
+}
+
 void handle_kernel_level_signals(int signum){
   // TODO: handle case when cont & stop are set together
   struct proc *p = myproc();
   if(signum == SIGSTOP){
     p->state = RUNNABLE;
-    while( !(myproc()->pending_signals & (1 << SIGCONT))){
+    while( !(p->pending_signals & (1 << SIGCONT))){
       yield();
     }
   } else if(signum != SIGCONT) {
-    acquire(&ptable.lock);
-    p->killed = 1;
-    if(p->state ==SLEEPING){
-      p->state= RUNNABLE;
-    }
-    release(&ptable.lock);
+    exit(2);
   }
 }
 
@@ -603,17 +606,21 @@ void pending_signals_handler(void)
   uint pending_unmasked = curproc->pending_signals & ~curproc->signal_mask;
   uint isBitSet;
   void (*curr_sa_handler)(int);
-  // uint curr_sigmask;
+  uint proc_sig_mask_backup;
+  uint curr_sigmask;
   for (int i=0; i<32; i++) {
     isBitSet = pending_unmasked & (1 << i);
     if(isBitSet)
     {
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
-      // curr_sigmask = curproc->signal_handlers[i].sigmask;
+      curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGDFL ){
         handle_kernel_level_signals(i);
-      } else if ((int)curr_sa_handler != SIGIGN){
-        
+      } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
+        proc_sig_mask_backup = curproc->signal_mask;
+        curproc->signal_mask = curr_sigmask;
+        handle_user_level_signals(i);
+        curproc->signal_mask = proc_sig_mask_backup
       }
       curproc->pending_signals&= ~(1<<i);
     }
