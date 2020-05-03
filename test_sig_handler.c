@@ -29,7 +29,7 @@ main(int argc, char *argv[])
     }
     kill(pid, SIG_TEST);
     wait();
-    printf("parent exits\n")
+    printf(1, "parent exits\n");
   }
   exit();
 }
