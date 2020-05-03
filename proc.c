@@ -600,6 +600,7 @@ void handle_user_level_signals(int signum){
   p->tf->esp -= 20;//need to push 
   memmove((void *)p->tf->esp, sigret_func, 20);
   uint *sigret_add = (uint *)p->tf->esp;
+  cprintf("sigret_add: %x", sigret_add);
   p->tf->esp -= 4;
   *(uint *)p->tf->esp = (uint)signum;
       
