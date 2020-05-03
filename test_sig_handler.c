@@ -38,6 +38,6 @@ main(int argc, char *argv[])
     printf(1, "parent's pid is : %d, child's pid is: %d\n", getpid(), pid );
     printf(1, "parent exits\n");
   }
-  printf("uint size : %d\n", sizeof(uint));
+  printf(1, "uint size : %d\n", (int)sizeof(uint));
   exit();
 }
