@@ -628,9 +628,8 @@ void pending_signals_handler(void)
   struct proc *curproc = myproc();
   void (*curr_sa_handler)(int);
   uint curr_sigmask;
-  return;
   for (int i=0; i<32; i++) {
-    if(((curproc->pending_signals & ~curproc->signal_mask) & (1 << i)) || i == SIGSTOP || i == SIGCONT || i == SIGKILL){
+    if(((curproc->pending_signals & ~curproc->signal_mask) & (1 << i)) || (i == SIGSTOP || i == SIGCONT || i == SIGKILL) && ( curproc->pending_signals & (1 << i))){
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGDFL ){
