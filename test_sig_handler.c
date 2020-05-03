@@ -1,3 +1,4 @@
+// command for shell: test_sig_handler
 #include "types.h"
 #include "stat.h"
 #include "user.h"
@@ -23,7 +24,7 @@ main(int argc, char *argv[])
       iter_num++;
     }
     if (iter_num < number_of_iterations){
-      printf(1, "child got signal SIG_TEST\n");
+      printf(1, "child got signal SIG_TEST!!\n");
     }
     exit();
   } else { //parent
