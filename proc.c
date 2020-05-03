@@ -117,8 +117,8 @@ found:
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame backup.
-  sp -= sizeof *p->user_tf_backup;
-  p->user_tf_backup = (struct trapframe*)sp;
+  // sp -= sizeof *p->user_tf_backup;
+  // p->user_tf_backup = (struct trapframe*)sp;
 
    // Leave room for trap frame.
   sp -= sizeof *p->tf;
