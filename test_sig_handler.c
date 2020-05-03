@@ -38,6 +38,7 @@ main(int argc, char *argv[])
     wait();
     printf(1, "parent's pid is : %d, child's pid is: %d\n", getpid(), pid );
     printf(1, "parent exits\n");
+    printf(1, "debug = %d\n", getpid());
   }
   exit();
 }

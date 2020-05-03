@@ -41,7 +41,7 @@ sys_kill(void)
 int
 sys_getpid(void)
 {
-  return myproc()->pid;
+  return debug;
 }
 
 int
