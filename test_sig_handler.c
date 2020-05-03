@@ -28,6 +28,7 @@ main(int argc, char *argv[])
       printf(1, "parent: %d\n", i);
     }
     kill(pid, SIG_TEST);
+    wait();
   }
   exit();
 }
