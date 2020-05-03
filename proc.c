@@ -598,7 +598,7 @@ void handle_user_level_signals(int signum){
       ///uint pre_eip = p->tf->eip;
       p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
       p->tf->esp -= 4;//need to push 
-      memmove((uint *)p->tf->esp, &sigret_func, 16);
+      memmove((void *)p->tf->esp, &sigret_func, 16);
       uint *sigret_add = (uint *)p->tf->esp;
 
       p->tf->esp -= 1;
@@ -606,7 +606,6 @@ void handle_user_level_signals(int signum){
       
       p->tf->esp -= 1;
       *(uint *)p->tf->esp = (uint)sigret_add;
-      p->tf->esp = (uint)p->tf->esp;  
 }
 
 void handle_kernel_level_signals(int signum){
