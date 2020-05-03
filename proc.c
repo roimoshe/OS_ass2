@@ -578,7 +578,6 @@ sigprocmask(uint sigmask)
 
 void sigret(void)
 {
-  debug = 2;
   struct proc *p = myproc();
   p->signal_mask = p->sig_mask_backup;
   memmove((void *)p->tf, (void *)p->user_tf_backup, sizeof(struct trapframe));
@@ -593,7 +592,6 @@ void sigret_func(void)
 // TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
   struct proc *p = myproc();
-  debug = 1;
       ///struct context context_for_user_space_sig_handler; //should be in alloc proc
       //2.4:
       memmove((void *)p->user_tf_backup, (void *)p->tf, sizeof(struct trapframe));

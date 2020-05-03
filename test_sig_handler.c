@@ -7,7 +7,8 @@ volatile int keep_running = 1;
 
 void
 callback_for_SIG_TEST(int signum){
-	keep_running = 0;
+  printf("callback!!!!!!!\n");
+  keep_running = 0;
 }
 
 int
@@ -19,13 +20,12 @@ main(int argc, char *argv[])
   int number_of_iterations = 100, iter_num = 0;
   int pid = fork();
   if (pid == 0){ //child
-    // printf(1, "handler adress in kernel: %x, handler actual adress: %x\n", getpid(), callback_for_SIG_TEST);
     while(keep_running && iter_num < number_of_iterations){
-      printf(1, "child is running, waiting for SIG_TEST.\n");
+      // printf(1, "child is running, waiting for SIG_TEST.\n");
       iter_num++;
     }
     if (iter_num < number_of_iterations){
-      printf(1, "child got signal SIG_TEST!!\n");
+      // printf(1, "child got signal SIG_TEST!!\n");
     }
     exit();
   } else { //parent
@@ -38,7 +38,6 @@ main(int argc, char *argv[])
     wait();
     printf(1, "parent's pid is : %d, child's pid is: %d\n", getpid(), pid );
     printf(1, "parent exits\n");
-    printf(1, "debug = %d\n", getpid());
   }
   exit();
 }
