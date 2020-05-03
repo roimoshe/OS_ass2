@@ -2,7 +2,7 @@
 #include "stat.h"
 #include "user.h"
 #define SIG_TEST 18
-int keep_running = 1;
+volatile int keep_running = 1;
 
 void
 callback_for_SIG_TEST(int signum){
