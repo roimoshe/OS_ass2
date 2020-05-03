@@ -514,6 +514,9 @@ kill(int pid, int signum)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){//TODOroi: maybe check the proc state
       p->pending_signals|=(1<<signum);
+      if( signum == SIGKILL && p->state == SLEEPING ){
+        p->state = RUNNABLE;
+      }
       release(&ptable.lock);
       return 0;
     }
@@ -625,7 +628,7 @@ void pending_signals_handler(void)
   void (*curr_sa_handler)(int);
   uint curr_sigmask;
   for (int i=0; i<32; i++) {
-    if((curproc->pending_signals & ~curproc->signal_mask) & (1 << i))
+    if(((curproc->pending_signals & ~curproc->signal_mask) & (1 << i)) || i == SIGSTOP || i == SIGCONT || i == SIGKILL){
     {
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
