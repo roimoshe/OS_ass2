@@ -117,8 +117,8 @@ found:
   sp = p->kstack + KSTACKSIZE;
 
   // Leave room for trap frame backup.
-  // sp -= sizeof *p->user_tf_backup;
-  // p->user_tf_backup = (struct trapframe*)sp;
+  sp -= sizeof *p->user_tf_backup;
+  p->user_tf_backup = (struct trapframe*)sp;
 
    // Leave room for trap frame.
   sp -= sizeof *p->tf;
@@ -625,9 +625,6 @@ void handle_kernel_level_signals(int signum){
 void pending_signals_handler(void)
 {
   // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
-  if( myproc() == 0 ){
-    return;
-  }
   struct proc *curproc = myproc();
   void (*curr_sa_handler)(int);
   uint curr_sigmask;
@@ -640,7 +637,7 @@ void pending_signals_handler(void)
       } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
         curproc->sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
-        handle_user_level_signals(i);
+        // handle_user_level_signals(i);
       }
       curproc->pending_signals&= ~(1<<i);
     }
