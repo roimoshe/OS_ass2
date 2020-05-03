@@ -15,22 +15,22 @@ main(int argc, char *argv[])
   struct sigaction sigaction_for_SIG_TEST = {.sa_handler = &callback_for_SIG_TEST, .sigmask = 0};
   struct sigaction old_sigaction;
   sigaction( SIG_TEST, &sigaction_for_SIG_TEST, &old_sigaction );
-  int number_of_iterations = 100;
+  int number_of_iterations = 100, iter_num = 0;
   int pid = fork();
   if (pid == 0){ //child
-    // while(keep_running){
-    //   printf(1, "child is running\n");
-    // }
-    for(int i = 0; i < number_of_iterations; i++){
-      printf(1, "keep_running is : %d\n", keep_running);
+    while(keep_running && iter_num < number_of_iterations){
+      printf(1, "child is running, waiting for SIG_TEST.\n");
+      iter_num++;
     }
-    printf(1, "child got signal no. : %d\n child exits\n", SIG_TEST);
+    printf(1, "child got signal SIG_TEST\n");
     exit();
   } else { //parent
-    for(int i = 0; i < number_of_iterations/2; i++){
-      printf(1, "parent: %d\n", i);
+    for(int i = 0; i < number_of_iterations/4; i++){
+      printf(1, "parent iteration no. : %d\n", i);
     }
+    printf(1, "parent send signal SIG_TEST to child\n");
     kill(pid, SIG_TEST);
+    printf(1, "parent waits to the child to exit\n");
     wait();
     printf(1, "parent exits\n");
   }
