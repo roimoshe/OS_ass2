@@ -591,22 +591,24 @@ void sigret_func(void)
 
 // TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
-  cprintf("in handle_user_level_signals!!!\n");
+  cprintf("in handle_user_level_signals 1\n");
   struct proc *p = myproc();
   ///struct context context_for_user_space_sig_handler; //should be in alloc proc
   //2.4:
   memmove((void *)p->user_tf_backup, (void *)p->tf, sizeof(struct trapframe));
   ///uint pre_eip = p->tf->eip;
+  cprintf("in handle_user_level_signals 2\n");
   p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
   p->tf->esp -= 16;//need to push 
   memmove((void *)p->tf->esp, sigret_func, 16);
   uint *sigret_add = (uint *)p->tf->esp;
-
+cprintf("in handle_user_level_signals 3\n");
   p->tf->esp -= 4;
   *(uint *)p->tf->esp = (uint)signum;
       
   p->tf->esp -= 4;
   *(uint *)p->tf->esp = (uint)sigret_add;
+  cprintf("in handle_user_level_signals 4\n");
 }
 
 void handle_kernel_level_signals(int signum){
