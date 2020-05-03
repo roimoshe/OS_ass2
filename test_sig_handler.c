@@ -35,6 +35,7 @@ main(int argc, char *argv[])
     kill(pid, SIG_TEST);
     printf(1, "parent waits to the child to exit\n");
     wait();
+    printf(1, "parent's pid is : %d, child's pid is: %d\n", getpid(), pid );
     printf(1, "parent exits\n");
   }
   exit();
