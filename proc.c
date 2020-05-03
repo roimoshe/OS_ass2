@@ -628,9 +628,12 @@ void pending_signals_handler(void)
   struct proc *curproc = myproc();
   void (*curr_sa_handler)(int);
   uint curr_sigmask;
+  uint bit_i_is_unmaskable, sig_i_is_pending;
   for (int i=0; i<32; i++) {
-    if(((curproc->pending_signals & ~curproc->signal_mask) & (1 << i)) ||
-            ((i == SIGSTOP || i == SIGCONT || i == SIGKILL) && ( curproc->pending_signals & (1 << i)))){
+    bit_i_is_unmaskable = (i == SIGSTOP || i == SIGCONT || i == SIGKILL);
+    sig_i_is_pending = ( curproc->pending_signals & (1 << i) );
+    sig_i_is_pending_and_unmasked = sig_i_is_pending & (~curproc->signal_mask);
+    if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGDFL ){
