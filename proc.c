@@ -591,6 +591,7 @@ void sigret_func(void)
 
 // TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
+  cprintf("sigret binary: %x %x %x %x %x", *(int *)sigret_func, *(int *)(sigret_func+4), *(int *)(sigret_func+8), *(int *)(sigret_func+12));
   struct proc *p = myproc();
   ///struct context context_for_user_space_sig_handler; //should be in alloc proc
   //2.4:
