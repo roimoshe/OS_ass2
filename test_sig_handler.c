@@ -22,7 +22,9 @@ main(int argc, char *argv[])
       printf(1, "child is running, waiting for SIG_TEST.\n");
       iter_num++;
     }
-    printf(1, "child got signal SIG_TEST\n");
+    if (iter_num < number_of_iterations){
+      printf(1, "child got signal SIG_TEST\n");
+    }
     exit();
   } else { //parent
     for(int i = 0; i < number_of_iterations/4; i++){
