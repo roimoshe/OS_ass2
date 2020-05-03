@@ -585,7 +585,7 @@ void sigret(void)
 
 void sigret_func(void)
 {
-  asm("mov $0x17, %eax"
+  asm("mov $0x17, %eax\n\t"
       "int $0x40");
 }
 
