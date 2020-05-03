@@ -597,14 +597,14 @@ void handle_user_level_signals(int signum){
   memmove((void *)p->user_tf_backup, (void *)p->tf, sizeof(struct trapframe));
   ///uint pre_eip = p->tf->eip;
   p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
-  // p->tf->esp -= 16;//need to push 
-  // memmove((void *)p->tf->esp, sigret_func, 16);
-  // uint *sigret_add = (uint *)p->tf->esp;
-  // p->tf->esp -= 4;
-  // *(uint *)p->tf->esp = (uint)signum;
+  p->tf->esp -= 20;//need to push 
+  memmove((void *)p->tf->esp, sigret_func, 20);
+  uint *sigret_add = (uint *)p->tf->esp;
+  p->tf->esp -= 4;
+  *(uint *)p->tf->esp = (uint)signum;
       
-  // p->tf->esp -= 4;
-  // *(uint *)p->tf->esp = (uint)sigret_add;
+  p->tf->esp -= 4;
+  *(uint *)p->tf->esp = (uint)sigret_add;
 }
 
 void handle_kernel_level_signals(int signum){
