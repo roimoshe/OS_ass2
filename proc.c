@@ -116,7 +116,11 @@ found:
   }
   sp = p->kstack + KSTACKSIZE;
 
-  // Leave room for trap frame.
+  // Leave room for trap frame backup.
+  sp -= sizeof *p->user_tf_backup;
+  p->user_tf_backup = (struct trapframe*)sp;
+
+   // Leave room for trap frame.
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
 
@@ -574,8 +578,9 @@ sigprocmask(uint sigmask)
 
 void sigret(void)
 {
-  myproc()->signal_mask = myproc()->sig_mask_backup;
-  myproc()->tf = myproc()->user_tf_backup;
+  struct proc *p = myproc();
+  p->signal_mask = p->sig_mask_backup;
+  memmove((void *)p->tf, (void *)p->user_tf_backup, sizeof(struct trapframe));
 }
 
 void sigret_func(void)
