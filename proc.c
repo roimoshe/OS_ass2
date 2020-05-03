@@ -618,7 +618,6 @@ void handle_kernel_level_signals(int signum){
       yield();
     }
   } else if(signum != SIGCONT) {
-    p->killed = 1;
     exit();
   }
 }
