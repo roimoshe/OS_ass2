@@ -19,7 +19,7 @@ main(int argc, char *argv[])
   int number_of_iterations = 100, iter_num = 0;
   int pid = fork();
   if (pid == 0){ //child
-    printf(1, "handler adress in kernel: %x, handler actual adress: %x\n", getpid(), callback_for_SIG_TEST);
+    // printf(1, "handler adress in kernel: %x, handler actual adress: %x\n", getpid(), callback_for_SIG_TEST);
     while(keep_running && iter_num < number_of_iterations){
       printf(1, "child is running, waiting for SIG_TEST.\n");
       iter_num++;
