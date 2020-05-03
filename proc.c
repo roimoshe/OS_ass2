@@ -633,7 +633,7 @@ void pending_signals_handler(void)
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGDFL ){
-        handle_kernel_level_signals(i);
+        // handle_kernel_level_signals(i);
       } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
         curproc->sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
