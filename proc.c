@@ -585,8 +585,8 @@ void sigret(void)
 
 void sigret_func(void)
 {
-  asm("mov $0x17, %eax");
-  asm("int $0x40");
+  asm("mov $0x17, %eax"
+      "int $0x40");
 }
 
 // TODO: make sure after the handler execution it returns with sigret
