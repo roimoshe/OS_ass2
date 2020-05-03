@@ -634,7 +634,6 @@ void pending_signals_handler(void)
   uint curr_sigmask;
   for (int i=0; i<32; i++) {
     if(((curproc->pending_signals & ~curproc->signal_mask) & (1 << i)) || i == SIGSTOP || i == SIGCONT || i == SIGKILL){
-    {
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGDFL ){
