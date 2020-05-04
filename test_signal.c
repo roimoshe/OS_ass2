@@ -6,7 +6,7 @@
 int
 main(int argc, char *argv[])
 {
-  printf(1, ">>>TEST SIGKILL<<<");
+  printf(1, ">>>TEST SIGKILL<<<\n");
   int pid = fork();
   int number_of_iterations = 100;
   if (pid == 0){ //child
@@ -21,10 +21,10 @@ main(int argc, char *argv[])
     printf(1, "send SIGKILL to child and wait till he exits\n");
     kill(pid, SIGKILL);
     wait();
-    printf(1, ">>>SIGKILL PASS<<<");
+    printf(1, ">>>SIGKILL PASS<<<\n");
   }
 
-  printf(1, ">>>TEST SIGSTOP/SIGCONT<<<");
+  printf(1, ">>>TEST SIGSTOP/SIGCONT<<<\n");
   pid = fork();
   if (pid == 0){ //child
     for(int i = 0; i < number_of_iterations*100; i++){
@@ -48,7 +48,7 @@ main(int argc, char *argv[])
     printf(1, "send SIGKILL to child and wait till he exits\n");
     kill(pid, SIGKILL);
     wait();
-    printf(1, ">>>SIGSTOP/SIGCONT PASS<<<");
+    printf(1, ">>>SIGSTOP/SIGCONT PASS<<<\n");
   }
 
 
