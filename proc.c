@@ -570,7 +570,6 @@ uint
 sigprocmask(uint sigmask)
 {
   struct proc *curproc = myproc();
-  //TODO: return error(-1) if tring to mask unmasked signals(etc: kill..)
   uint old_sigmask = curproc->signal_mask;
   curproc->signal_mask = sigmask;
   return old_sigmask;
@@ -590,7 +589,6 @@ void sigret_func(void)
       "int $0x40");
 }
 
-// TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
   // cprintf("\nsigret binary: %x %x %x %x %x\n", *(int *)sigret_func, *(int *)(sigret_func+4), *(int *)(sigret_func+8), *(int *)(sigret_func+12), *(int *)(sigret_func+16));
   struct proc *p = myproc();
@@ -643,6 +641,8 @@ void pending_signals_handler(void)
       curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGDFL ){
         handle_kernel_level_signals(i);
+      } else if ( (int)curr_sa_handler == SIGSTOP || (int)curr_sa_handler == SIGCONT || (int)curr_sa_handler == SIGKILL ){
+        handle_kernel_level_signals((int)curr_sa_handler);
       } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
         curproc->sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
