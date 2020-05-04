@@ -589,24 +589,24 @@ void sigret_func(void)
       "int $0x40");
 }
 
-void handle_user_level_signals(struct trapframe *tf, int signum){
+void handle_user_level_signals(int signum){
   // cprintf("\nsigret binary: %x %x %x %x %x\n", *(int *)sigret_func, *(int *)(sigret_func+4), *(int *)(sigret_func+8), *(int *)(sigret_func+12), *(int *)(sigret_func+16));
   struct proc *p = myproc();
   ///struct context context_for_user_space_sig_handler; //should be in alloc proc
   //2.4:
-  memmove((void *)p->user_tf_backup, (void *)tf, sizeof(struct trapframe));
-  // tf->eip = (uint)p->signal_handlers[signum].sa_handler;
-  tf->esp -= 16;//need to push 
-  memmove((void *)tf->esp, sigret_func, 16);
-  uint *sigret_add = (uint *)tf->esp;
-  tf->esp -= 4;
-  *(uint *)tf->esp = (uint)signum;
+  memmove((void *)p->user_tf_backup, (void *)p->tf, sizeof(struct trapframe));
+  // p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
+  p->tf->esp -= 16;//need to push 
+  memmove((void *)p->tf->esp, sigret_func, 16);
+  uint *sigret_add = (uint *)p->tf->esp;
+  p->tf->esp -= 4;
+  *(uint *)p->tf->esp = (uint)signum;
       
-  tf->esp -= 4;
-  *(uint *)tf->esp = (uint)sigret_add;
+  p->tf->esp -= 4;
+  *(uint *)p->tf->esp = (uint)sigret_add;
 
-  tf->esp -= 4;
-  *(uint *)tf->esp = (uint)p->signal_handlers[signum].sa_handler;
+  p->tf->esp -= 4;
+  *(uint *)p->tf->esp = (uint)p->signal_handlers[signum].sa_handler;
 }
 
 void handle_kernel_level_signals(int signum){
@@ -622,7 +622,7 @@ void handle_kernel_level_signals(int signum){
   }
 }
 
-void pending_signals_handler(struct trapframe *tf)
+void pending_signals_handler(void)
 {
   // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
   struct proc *curproc = myproc();
@@ -646,7 +646,7 @@ void pending_signals_handler(struct trapframe *tf)
       } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
         curproc->sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
-        handle_user_level_signals(tf, i);
+        handle_user_level_signals(i);
       }
       curproc->pending_signals&= ~(1<<i);
     }

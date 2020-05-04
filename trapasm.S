@@ -23,10 +23,8 @@ alltraps:
   # Return falls through to trapret...
 .globl trapret
 trapret:
-  # code for checking the signals(func reffered from proc.c):
-  pushl %esp
+  # code for checking the signals(func reffered from proc.c): 
   call pending_signals_handler
-  addl $4, %esp
   popal
   popl %gs
   popl %fs
