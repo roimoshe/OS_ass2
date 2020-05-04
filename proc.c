@@ -258,7 +258,7 @@ fork(void)
 void
 exit(void)
 {
-  cprintf("\nsys_exit...\n")
+  cprintf("\nsys_exit...\n");
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
