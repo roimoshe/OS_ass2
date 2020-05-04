@@ -637,14 +637,14 @@ void pending_signals_handler(void)
     if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
+      curproc->pending_signals&= ~(1<<i);
       if ( (int)curr_sa_handler == SIGDFL ){
         handle_kernel_level_signals(i);
       } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
         curproc->sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
-        handle_user_level_signals(i);
+        curproc->pending_signals&= ~(1<<i);
       }
-      curproc->pending_signals&= ~(1<<i);
     }
   }
 }
