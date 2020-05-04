@@ -597,8 +597,8 @@ void handle_user_level_signals(int signum){
   //2.4:
   memmove((void *)p->user_tf_backup, (void *)p->tf, sizeof(struct trapframe));
   // p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
-  p->tf->esp -= 50;//need to push 
-  memmove((void *)p->tf->esp, sigret_func, 50);
+  p->tf->esp -= 16;//need to push 
+  memmove((void *)p->tf->esp, sigret_func, 16);
   uint *sigret_add = (uint *)p->tf->esp;
   p->tf->esp -= 4;
   *(uint *)p->tf->esp = (uint)signum;
