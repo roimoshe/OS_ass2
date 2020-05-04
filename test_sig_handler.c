@@ -2,7 +2,7 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
-#define SIG_TEST 7
+#define SIG_TEST 18
 volatile int keep_running = 1;
 
 void
