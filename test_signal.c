@@ -17,10 +17,10 @@ main(int argc, char *argv[])
     for(int i = 0; i < number_of_iterations/2; i++){
       printf(1, "parent: %d\n", i);
     }
-    printf(1, "send SIGKILL to child and wait till he exits\n")
+    printf(1, "send SIGKILL to child and wait till he exits\n");
     kill(pid, SIGKILL);
     wait();
-    printf(1, "parent exits\n")
+    printf(1, "parent exits\n");
   }
   exit();
 }
