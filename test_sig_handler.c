@@ -19,7 +19,9 @@ main(int argc, char *argv[])
 {
   struct sigaction sigaction_for_SIG_TEST = {.sa_handler = callback_for_SIG_TEST, .sigmask = 0};
   struct sigaction old_sigaction;
-  sigaction( SIG_TEST, &sigaction_for_SIG_TEST, &old_sigaction );
+  if( sigaction( SIG_TEST, &sigaction_for_SIG_TEST, &old_sigaction ) < 0){
+    printf(1, "error in sigaction!\n");
+  }
   int number_of_iterations = 100, iter_num = 0;
   int pid = fork();
   if (pid < 0){

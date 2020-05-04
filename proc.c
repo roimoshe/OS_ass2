@@ -578,6 +578,7 @@ sigprocmask(uint sigmask)
 
 void sigret(void)
 {
+  cprintf("in sigret!!!\n");
   struct proc *p = myproc();
   p->signal_mask = p->sig_mask_backup;
   memmove((void *)p->tf, (void *)p->user_tf_backup, sizeof(struct trapframe));
@@ -654,7 +655,7 @@ void pending_signals_handler(void)
 
 int sigaction( int signum, const struct sigaction *act, struct sigaction *oldact ){
   struct sigaction *handler = &myproc()->signal_handlers[signum];
-  if( signum == SIGSTOP || signum == SIGCONT || signum == SIGKILL || signum < 0 || signum > 31 ){
+  if( signum == SIGSTOP || signum == SIGCONT || signum == SIGKILL || signum < 0 || signum > 31 || act == 0){
     oldact = null;
     return -1;
   }
