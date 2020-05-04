@@ -20,7 +20,10 @@ main(int argc, char *argv[])
   sigaction( SIG_TEST, &sigaction_for_SIG_TEST, &old_sigaction );
   int number_of_iterations = 100, iter_num = 0;
   int pid = fork();
-  if (pid == 0){ //child
+  if (pid < 0){
+    printf(1, "error in fork!\n");
+    exit();
+  } else if (pid == 0){ //child
     while(keep_running && iter_num < number_of_iterations){
       printf(1, "child is running, waiting for SIG_TEST.\n");
       iter_num++;
