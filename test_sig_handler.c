@@ -8,7 +8,7 @@ volatile int keep_running = 1;
 void
 callback_for_SIG_TEST(int signum){
   char c = '@';
-  write(fd, &c, 1);
+  write(1, &c, 1);
   keep_running = 0;
 }
 
