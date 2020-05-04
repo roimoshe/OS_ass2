@@ -258,8 +258,8 @@ fork(void)
 void
 exit(void)
 {
-  cprintf("\nsys_exit...\n");
   struct proc *curproc = myproc();
+  cprintf("\npending_signals: %x, sys_exit...\n", curproc->pending_signals);
   struct proc *p;
   int fd;
 
