@@ -578,6 +578,7 @@ sigprocmask(uint sigmask)
 
 void sigret(void)
 {
+  cprintf("\nin sigret\n");
   struct proc *p = myproc();
   p->signal_mask = p->sig_mask_backup;
   memmove((void *)p->tf, (void *)p->user_tf_backup, sizeof(struct trapframe));
@@ -585,20 +586,21 @@ void sigret(void)
 
 void sigret_func(void)
 {
+  cprintf("\nin sugret func\n");
   asm("mov $0x17, %eax\n\t"
       "int $0x40");
 }
 
 // TODO: make sure after the handler execution it returns with sigret
 void handle_user_level_signals(int signum){
-  cprintf("sigret binary: %x %x %x %x %x\n", *(int *)sigret_func, *(int *)(sigret_func+4), *(int *)(sigret_func+8), *(int *)(sigret_func+12), *(int *)(sigret_func+16));
+  // cprintf("\nsigret binary: %x %x %x %x %x\n", *(int *)sigret_func, *(int *)(sigret_func+4), *(int *)(sigret_func+8), *(int *)(sigret_func+12), *(int *)(sigret_func+16));
   struct proc *p = myproc();
   ///struct context context_for_user_space_sig_handler; //should be in alloc proc
   //2.4:
   memmove((void *)p->user_tf_backup, (void *)p->tf, sizeof(struct trapframe));
   // p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
-  p->tf->esp -= 16;//need to push 
-  memmove((void *)p->tf->esp, sigret_func, 16);
+  p->tf->esp -= 50;//need to push 
+  memmove((void *)p->tf->esp, sigret_func, 50);
   uint *sigret_add = (uint *)p->tf->esp;
   p->tf->esp -= 4;
   *(uint *)p->tf->esp = (uint)signum;
