@@ -20,8 +20,8 @@ main(int argc, char *argv[])
   int number_of_iterations = 100, iter_num = 0;
   int pid = fork();
   if (pid == 0){ //child
-    while(keep_running && iter_num < number_of_iterations*1000){
-      // printf(1, "child is running, waiting for SIG_TEST.\n");
+    while(keep_running && iter_num < number_of_iterations){
+      printf(1, "child is running, waiting for SIG_TEST.\n");
       iter_num++;
     }
     if (iter_num < number_of_iterations){
@@ -31,7 +31,7 @@ main(int argc, char *argv[])
     }
     exit();
   } else { //parent
-    for(int i = 0; i < number_of_iterations/4; i++){
+    for(int i = 0; i < number_of_iterations/10; i++){
       printf(1, "parent iteration no. : %d\n", i);
     }
     printf(1, "parent send signal SIG_TEST to child\n");
