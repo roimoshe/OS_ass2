@@ -41,7 +41,7 @@ main(int argc, char *argv[])
     exit();
   } else { //parent
     for(int i = 0; i < number_of_iterations/10; i++){
-      printf(1, "pid: parent iteration no. : %d\n", getpid(), i);
+      printf(1, "pid:%d, parent iteration no. : %d\n", getpid(), i);
     }
     printf(1, "parent send signal SIG_TEST to child\n");
     if (kill(pid, SIG_TEST) < 0 ){
