@@ -596,15 +596,18 @@ void handle_user_level_signals(int signum){
   ///struct context context_for_user_space_sig_handler; //should be in alloc proc
   //2.4:
   memmove((void *)p->user_tf_backup, (void *)p->tf, sizeof(struct trapframe));
-  p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
-  p->tf->esp -= 20;//need to push 
-  memmove((void *)p->tf->esp, sigret_func, 20);
+  // p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
+  p->tf->esp -= 16;//need to push 
+  memmove((void *)p->tf->esp, sigret_func, 16);
   uint *sigret_add = (uint *)p->tf->esp;
   p->tf->esp -= 4;
   *(uint *)p->tf->esp = (uint)signum;
       
   p->tf->esp -= 4;
   *(uint *)p->tf->esp = (uint)sigret_add;
+
+  p->tf->esp -= 4;
+  *(uint *)p->tf->esp = (uint)p->signal_handlers[signum].sa_handler;
 }
 
 void handle_kernel_level_signals(int signum){
@@ -637,14 +640,14 @@ void pending_signals_handler(void)
     if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
-      curproc->pending_signals&= ~(1<<i);
       if ( (int)curr_sa_handler == SIGDFL ){
         handle_kernel_level_signals(i);
       } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
         curproc->sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
-        curproc->pending_signals&= ~(1<<i);
+        handle_user_level_signals(i);
       }
+      curproc->pending_signals&= ~(1<<i);
     }
   }
 }
