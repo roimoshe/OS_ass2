@@ -8,7 +8,7 @@ volatile int keep_running = 1;
 void
 callback_for_SIG_TEST(int signum){
   keep_running = 0;
-  // printf(1, "in callback!!");
+  printf(1, "in callback!!");
 }
 
 int
