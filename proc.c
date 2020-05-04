@@ -578,7 +578,6 @@ sigprocmask(uint sigmask)
 
 void sigret(void)
 {
-  cprintf("\nin sigret\n");
   struct proc *p = myproc();
   p->signal_mask = p->sig_mask_backup;
   memmove((void *)p->tf, (void *)p->user_tf_backup, sizeof(struct trapframe));
@@ -586,7 +585,6 @@ void sigret(void)
 
 void sigret_func(void)
 {
-  cprintf("\nin sugret func\n");
   asm("mov $0x17, %eax\n\t"
       "int $0x40");
 }
