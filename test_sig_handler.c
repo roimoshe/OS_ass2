@@ -2,12 +2,12 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
-#define SIG_TEST 18
+#define SIG_TEST 7
 volatile int keep_running = 1;
 
 void
 callback_for_SIG_TEST(int signum){
-  char c = '@';
+  char c = '0'+signum;
   write(1, &c, 1);
   keep_running = 0;
 }
