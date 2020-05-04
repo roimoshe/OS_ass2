@@ -259,7 +259,7 @@ void
 exit(void)
 {
   struct proc *curproc = myproc();
-  cprintf("\npending_signals: %x, sys_exit...\n", curproc->pending_signals);
+  // cprintf("\npending_signals: %x, sys_exit...\n", curproc->pending_signals);
   struct proc *p;
   int fd;
 
