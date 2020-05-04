@@ -20,7 +20,7 @@ main(int argc, char *argv[])
   int number_of_iterations = 100, iter_num = 0;
   int pid = fork();
   if (pid == 0){ //child
-    while(keep_running && iter_num < number_of_iterations*100){
+    while(keep_running && iter_num < number_of_iterations*1000){
       // printf(1, "child is running, waiting for SIG_TEST.\n");
       iter_num++;
     }
