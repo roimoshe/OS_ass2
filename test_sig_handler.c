@@ -21,11 +21,13 @@ main(int argc, char *argv[])
   int pid = fork();
   if (pid == 0){ //child
     while(keep_running && iter_num < number_of_iterations){
-      // printf(1, "child is running, waiting for SIG_TEST.\n");
+      printf(1, "child is running, waiting for SIG_TEST.\n");
       iter_num++;
     }
     if (iter_num < number_of_iterations){
-      // printf(1, "child got signal SIG_TEST!!\n");
+      printf(1, "child got signal SIG_TEST!!\n");
+    } else {
+      printf(1, "child exists without getting signal SIG_TEST :(  :(  \n");
     }
     exit();
   } else { //parent
