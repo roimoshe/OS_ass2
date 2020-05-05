@@ -116,13 +116,12 @@ found:
   }
   sp = p->kstack + KSTACKSIZE;
 
-  // Leave room for trap frame backup.
-  sp -= sizeof *p->user_tf_backup;
-  p->user_tf_backup = (struct trapframe*)sp;
-
-   // Leave room for trap frame.
+  // Leave room for trap frame.
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
+
+  // Allocate room for trap frame backup.
+  p->user_tf_backup = (struct trapframe *)kalloc();
 
   // Set up new context to start executing at forkret,
   // which returns to trapret.
@@ -133,6 +132,7 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+  memset(p->user_tf_backup, 0, sizeof(struct trapframe));
 
   return p;
 }
@@ -578,10 +578,10 @@ sigprocmask(uint sigmask)
 
 void sigret(void)
 {
-  cprintf("in sigret!!!\n");
+  cprintf("#### sigret #####\n");
   struct proc *p = myproc();
   p->signal_mask = p->sig_mask_backup;
-  memmove((void *)p->tf, (void *)p->user_tf_backup, sizeof(struct trapframe));
+  memmove((struct trapframe *)p->tf, (struct trapframe *)p->user_tf_backup, sizeof(struct trapframe));
 }
 
 void sigret_func(void)
@@ -595,7 +595,7 @@ void handle_user_level_signals(int signum){
   struct proc *p = myproc();
   ///struct context context_for_user_space_sig_handler; //should be in alloc proc
   //2.4:
-  memmove((void *)p->user_tf_backup, (void *)p->tf, sizeof(struct trapframe));
+  memmove((struct trapframe *)p->user_tf_backup, (struct trapframe *)p->tf, sizeof(struct trapframe));
   // p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
   p->tf->esp -= 16;//need to push 
   memmove((void *)p->tf->esp, sigret_func, 16);

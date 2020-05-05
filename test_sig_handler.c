@@ -31,11 +31,11 @@ main(int argc, char *argv[])
     exit();
   } else if (pid == 0){ //child
     while(keep_running && iter_num < number_of_iterations){
-      printf(1, "child is running, waiting for SIG_TEST.\n");
+      printf(1, "childID %d is running, waiting for SIG_TEST.\n", pid);
       iter_num++;
     }
     if (iter_num < number_of_iterations){
-      printf(1, "child got signal SIG_TEST!!\n");
+      printf(1, "childID %d got signal SIG_TEST!!\n", pid);
     } else {
       printf(1, "child exists without getting signal SIG_TEST :(  :(  \n");
     }
@@ -44,7 +44,7 @@ main(int argc, char *argv[])
     for(int i = 0; i < number_of_iterations/10; i++){
       printf(1, "pid:%d, parent iteration no. : %d\n", getpid(), i);
     }
-    printf(1, "parent send signal SIG_TEST to child\n");
+    printf(1, "parentID send signal SIG_TEST to child\n", getpid());
     if (kill(pid, SIG_TEST) < 0 ){
       printf(1, "error in kill syscall\n");
     }
