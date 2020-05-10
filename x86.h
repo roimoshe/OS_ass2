@@ -151,7 +151,7 @@ cas(volatile void *addr, int expected, int newval){
             "  lock\n"
             "  cmpxchgl %[newval], %[mem]\n"
             "  sete %0\n"
-            : "=q" (ret), [mem] "+m" (*addr), "+a" (expected)
+            : "=q" (ret), [mem] "+m" (*(int*)addr), "+a" (expected)
             : [newval]"r" (newval)
             : "memory");    // barrier for compiler reordering around this
 
