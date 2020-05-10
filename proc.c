@@ -15,6 +15,7 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
+int lock_ptable = 0;
 extern void forkret(void);
 extern void trapret(void);
 
@@ -96,18 +97,24 @@ allocproc(void)
   struct proc *p;
   char *sp;
 
-  acquire(&ptable.lock);
+  //acquire(&ptable.lock);
+
+  while (!cas(&lock_ptable, 0 , 1)){};
+
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
 
-  release(&ptable.lock);
+  //release(&ptable.lock);
+  lock_ptable =0;
   return 0;
 
 found:
   p->state = EMBRYO;
-  release(&ptable.lock);
+  //release(&ptable.lock);
+  lock_ptable =0;
+
 
   p->pid = allocpid();
   for (int i = 0; i<32; i++){
