@@ -72,13 +72,6 @@ myproc(void) {
 int 
 allocpid(void) 
 {
-  //int pid;
-  //acquire(&ptable.lock);
-  //pid = nextpid++;
-  //release(&ptable.lock);
-  //return pid;
-
-  //use cas:
   int old;
   do {
   old = nextpid;
