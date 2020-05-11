@@ -90,19 +90,13 @@ allocproc(void)
   struct proc *p;
   char *sp;
 
-  p = ptable.proc;
-  while( p < &ptable.proc[NPROC] ){
-    if(p->state == UNUSED ){
-      //acquire(&ptable.lock);
-      if( cas(&lock_ptable, 0 , 1) ){
-        goto found;
-      } else {
-        p = ptable.proc;
-      }
-    } else{
-      p++;
-    }
-  }
+  //acquire(&ptable.lock);
+
+  while (!cas(&lock_ptable, 0 , 1)){};
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    if(p->state == UNUSED)
+      goto found;
 
   //release(&ptable.lock);
   lock_ptable =0;
