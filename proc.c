@@ -91,7 +91,7 @@ allocproc(void)
   char *sp;
 
   //acquire(&ptable.lock);
-
+  pushcli();
   while (!cas(&lock_ptable, 0 , 1)){};
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
@@ -99,13 +99,15 @@ allocproc(void)
       goto found;
 
   //release(&ptable.lock);
-  lock_ptable =0;
+  lock_ptable = 0;
+  popcli();
   return 0;
 
 found:
   p->state = EMBRYO;
   //release(&ptable.lock);
-  lock_ptable =0;
+  lock_ptable = 0;
+  popcli();
 
 
   p->pid = allocpid();
