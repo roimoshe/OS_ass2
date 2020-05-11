@@ -335,6 +335,8 @@ wait(void)
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
+        kfree((char *)p->user_tf_backup);
+        p->user_tf_backup = 0;
         freevm(p->pgdir);
         p->pid = 0;
         p->parent = 0;
