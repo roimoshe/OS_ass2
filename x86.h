@@ -146,16 +146,17 @@ lcr3(uint val)
 
 static inline int 
 cas(volatile void *addr, int expected, int newval){
-    unsigned char sucssed;
+    int output;
     asm volatile (
-            "  lock\n"
-            "  cmpxchgl %[newval], %[mem]\n"
-            "  sete %0\n"
-            : "=q" (sucssed), [mem] "+m" (*(int*)addr), "+a" (expected)
-            : [newval]"r" (newval)
-            : "memory");    // barrier for compiler reordering around this
+            "lock; cmpxchg %3, %1\n\t"
+            "pushfl\n\t"
+            "popl %%ecx\n\t"
+            "andl $0x0040, %%ecx\n\t"
+            "shrl $6, %%ecx\n\t"
+            "movl %%ecx, %0" : "=r"(output), "+m"(*(int*)addr) , "+a"(expected) : "r"(newval)
+            :"cc", "memory");
 
-    return sucssed;   // ZF result, 1 on success else 0
+    return output;
 }
 
 //PAGEBREAK: 36
