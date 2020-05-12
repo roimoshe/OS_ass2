@@ -635,7 +635,6 @@ int got_sig_cont(){
     sig_i_is_pending_and_unmasked = sig_i_is_pending & (~curproc->signal_mask);
     if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
-      curr_sigmask = curproc->signal_handlers[i].sigmask;
       if ( (int)curr_sa_handler == SIGCONT || i == SIGCONT){
         return 1;
       }
