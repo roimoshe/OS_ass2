@@ -625,10 +625,9 @@ int got_sig_cont(){
   // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
   struct proc *curproc = myproc();
   void (*curr_sa_handler)(int);
-  uint curr_sigmask;
   uint bit_i_is_unmaskable, sig_i_is_pending, sig_i_is_pending_and_unmasked;
   if(curproc == 0){
-    return;
+    return -1;
   }
   for (int i=0; i<32; i++) {
     bit_i_is_unmaskable = (i == SIGSTOP || i == SIGCONT || i == SIGKILL);
@@ -642,7 +641,7 @@ int got_sig_cont(){
       }
     }
   }
-  return 0
+  return 0;
 }
 
 void handle_kernel_level_signals(int signum){
