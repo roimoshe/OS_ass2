@@ -529,9 +529,12 @@ kill(int pid, int signum)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){//TODOroi: maybe check the proc state
       p->pending_signals|=(1<<signum);
-      if( signum == SIGKILL && p->state == SLEEPING ){ // TODO: maybe do it for signals that it's handles is kill
-        p->state = RUNNABLE;
+      if( signum == SIGKILL || p->signal_handlers[signum].sa_handler == SIGKILL ||
+       (p->signal_handlers[signum].sa_handler == SIGDFL && signum != SIGSTOP && signum != SIGCONT ) ){
         p->killed = 1;
+        if(p->state == SLEEPING){ // TODO: maybe do it for signals that it's handles is kill, also handle them
+          p->state = RUNNABLE;
+        }
       }
       release(&ptable.lock);
       return 0;
