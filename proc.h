@@ -1,3 +1,5 @@
+#include "x86.h"
+
 #define SIGDFL 0 /* default signal handling */
 #define SIGIGN 1 /* ignore signal */
 
