@@ -529,9 +529,10 @@ kill(int pid, int signum)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){//TODOroi: maybe check the proc state
       p->pending_signals|=(1<<signum);
-      //if( signum == SIGKILL && p->state == SLEEPING ){
-        //p->state = RUNNABLE;
-      //}
+      if( signum == SIGKILL && p->state == SLEEPING ){ // TODO: maybe do it for signals that it's handles is kill
+        p->state = RUNNABLE;
+        p->killed = 1;
+      }
       release(&ptable.lock);
       return 0;
     }
@@ -620,20 +621,44 @@ void handle_user_level_signals(int signum){
   *(uint *)p->tf->esp = (uint)p->signal_handlers[signum].sa_handler;
 }
 
+int got_sig_cont(){
+  // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
+  struct proc *curproc = myproc();
+  void (*curr_sa_handler)(int);
+  uint curr_sigmask;
+  uint bit_i_is_unmaskable, sig_i_is_pending, sig_i_is_pending_and_unmasked;
+  if(curproc == 0){
+    return;
+  }
+  for (int i=0; i<32; i++) {
+    bit_i_is_unmaskable = (i == SIGSTOP || i == SIGCONT || i == SIGKILL);
+    sig_i_is_pending = ( curproc->pending_signals & (1 << i) );
+    sig_i_is_pending_and_unmasked = sig_i_is_pending & (~curproc->signal_mask);
+    if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
+      curr_sa_handler = curproc->signal_handlers[i].sa_handler;
+      curr_sigmask = curproc->signal_handlers[i].sigmask;
+      if ( (int)curr_sa_handler == SIGCONT || i == SIGCONT){
+        return 1;
+      }
+    }
+  }
+  return 0
+}
+
 void handle_kernel_level_signals(int signum){
   // TODO: handle case when cont & stop are set together
   struct proc *p = myproc();
   if(signum == SIGSTOP){
     p->state = RUNNABLE;
-    while( !(p->pending_signals & (1 << SIGCONT))){
+    while( !got_sig_cont() ){
       yield();
     }
   } else if(signum != SIGCONT) {
     //exit();
-    p->killed = 1;
-    if(p->state == SLEEPING){
-      p->state = RUNNABLE;
-    }
+    // p->killed = 1;
+    // if(p->state == SLEEPING){
+    //   p->state = RUNNABLE;
+    // }
   }
 }
 
