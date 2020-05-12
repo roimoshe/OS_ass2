@@ -145,7 +145,8 @@ lcr3(uint val)
 }
 
 static inline int 
-cas(volatile void *addr, int expected, int newval){
+//TODO: delete old cas:
+/*cas(volatile void *addr, int expected, int newval){
     int output;
     asm volatile (
             "lock; cmpxchg %3, %1\n\t"
@@ -157,6 +158,17 @@ cas(volatile void *addr, int expected, int newval){
             :"cc", "memory");
 
     return output;
+}*/
+cas(volatile void *addr, int expected, int newval){
+    unsigned char sucssed;
+    asm volatile (
+            "  lock\n"
+            "  cmpxchgl %[newval], %[mem]\n"
+            "  sete %0\n"
+            : "=q" (sucssed), [mem] "+m" (*(int*)addr), "+a" (expected)
+            : [newval]"r" (newval)
+            : "memory");    // barrier for compiler reordering around this
+    return sucssed;   // ZF result, 1 on success else 0
 }
 
 //PAGEBREAK: 36

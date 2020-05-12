@@ -529,9 +529,9 @@ kill(int pid, int signum)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){//TODOroi: maybe check the proc state
       p->pending_signals|=(1<<signum);
-      if( signum == SIGKILL && p->state == SLEEPING ){
-        p->state = RUNNABLE;
-      }
+      //if( signum == SIGKILL && p->state == SLEEPING ){
+        //p->state = RUNNABLE;
+      //}
       release(&ptable.lock);
       return 0;
     }
@@ -629,7 +629,11 @@ void handle_kernel_level_signals(int signum){
       yield();
     }
   } else if(signum != SIGCONT) {
-    exit();
+    //exit();
+    p->killed = 1;
+    if(p->state == SLEEPING){
+      p->state = RUNNABLE;
+    }
   }
 }
 
@@ -644,17 +648,23 @@ void pending_signals_handler(void)
     return;
   }
   for (int i=0; i<32; i++) {
+    // calculae current vars; TODO: SIGCONT can be mask
     bit_i_is_unmaskable = (i == SIGSTOP || i == SIGCONT || i == SIGKILL);
     sig_i_is_pending = ( curproc->pending_signals & (1 << i) );
     sig_i_is_pending_and_unmasked = sig_i_is_pending & (~curproc->signal_mask);
+
     if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
+      // current handler
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
+
       if ( (int)curr_sa_handler == SIGDFL ){
         handle_kernel_level_signals(i);
-      } else if ( (int)curr_sa_handler == SIGSTOP || (int)curr_sa_handler == SIGCONT || (int)curr_sa_handler == SIGKILL ){
+      } 
+      else if ( (int)curr_sa_handler == SIGSTOP || (int)curr_sa_handler == SIGCONT || (int)curr_sa_handler == SIGKILL ){
         handle_kernel_level_signals((int)curr_sa_handler);
-      } else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
+      }
+      else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
         curproc->sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
         handle_user_level_signals(i);
