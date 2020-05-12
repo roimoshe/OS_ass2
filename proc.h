@@ -64,7 +64,7 @@ struct proc {
   uint pending_signals;
   uint signal_mask;
   struct sigaction signal_handlers[32];
-  struct trapframe *user_tf_backup;
+  struct trapframe user_tf_backup;
   uint sig_mask_backup;        // ProCess signal mask backup
 };
 
