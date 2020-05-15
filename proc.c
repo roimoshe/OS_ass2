@@ -389,7 +389,7 @@ scheduler(void)
     /*acquire(&ptable.lock);*/
     pushcli();
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(!cas(&p->state,RUNNABLE, -RUNNABLE))
+      if(!cas(&p->state,RUNNABLE, -RUNNING))
          continue;
 
       // Switch to chosen process.  It is the process's job
@@ -398,15 +398,15 @@ scheduler(void)
       c->proc = p;
       //TODO: check if switchuvm need to be before the cas
       switchuvm(p);
-      if(!cas(&p->state, -RUNNABLE , RUNNING)){
-        panic("scheduler - change state from  -runnable to runnable");
+      if(!cas(&p->state, -RUNNING , RUNNING)){
+        panic("scheduler - change state from  -RUNNING to RUNNING");
       }
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
       pushcli();
       cas(&p->state,-ZOMBIE,ZOMBIE);  
-      cas(&myproc()->state,-RUNNING,RUNNABLE);
+      cas(&myproc()->state,-RUNNABLE,RUNNABLE);
       cas(&p->state,-SLEEPING,SLEEPING);
       popcli();
       // Process is done running for now.
@@ -450,8 +450,8 @@ yield(void)
 {
   /*acquire(&ptable.lock);  //DOC: yieldlock*/
   pushcli();
-  if(!cas(&myproc()->state,RUNNING,-RUNNING)){
-   panic("inside yield- cant cahnge state to -running");
+  if(!cas(&myproc()->state,RUNNING,-RUNNABLE)){
+   panic("inside yield- cant cahnge state to -runnable");
   }
   sched();
   popcli();
