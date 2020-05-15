@@ -303,12 +303,9 @@ exit(void)
     if(curproc->state==-ZOMBIE)
       break;
   }
-  sched();
-  while(!cas(&curproc->state,-ZOMBIE,ZOMBIE)){
-    if(curproc->state==ZOMBIE)
-      break;
-  }
   popcli();
+  sched();
+
   panic("zombie exit");
 }
 
@@ -386,13 +383,13 @@ scheduler(void)
       // before jumping back to us.
       c->proc = p;
       //TODO: check if switchuvm need to be before the cas
+      switchuvm(p);
       pushcli();
       if(!cas(&p->state, RUNNABLE , RUNNING)){
         popcli();
         continue;
       }
       ////////////
-      switchuvm(p);
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
@@ -429,6 +426,12 @@ sched(void)
     panic("sched interruptible");
   intena = mycpu()->intena;
   swtch(&p->context, mycpu()->scheduler);
+  pushcli();
+  cas(&p->state,-ZOMBIE,ZOMBIE);  
+  cas(&myproc()->state,-RUNNING,RUNNABLE);
+  cas(&p->state,-SLEEPING,SLEEPING);
+  popcli();
+
   mycpu()->intena = intena;
 }
 
@@ -443,13 +446,8 @@ yield(void)
       break;
     }
   }
-  sched();
-  while(!cas(&myproc()->state,-RUNNING,RUNNABLE)){
-    if(myproc()->state==RUNNABLE){
-      break;
-    }
-  }
   popcli();
+  sched();
 }
 
 // A fork child's very first scheduling by scheduler()
@@ -499,17 +497,14 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   p->chan = chan;
   /*p->state = SLEEPING;*/
+  pushcli();
   while(!cas(&p->state,RUNNING,-SLEEPING)){
     if(p->state==-SLEEPING)
       break;
   };
-
+  popcli();
   sched();
 
-  while(!cas(&p->state,-SLEEPING,SLEEPING)){
-    if(p->state==SLEEPING)
-      break;
-  }
 
   // Tidy up.
   p->chan = 0;
