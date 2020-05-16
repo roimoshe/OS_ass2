@@ -46,7 +46,7 @@ main(int argc, char *argv[])
       for(int i = 2*number_of_iterations; i < 3*number_of_iterations; i++){
         printf(1, "parent: %d\n", i);
       }
-      printf(1, "send SIGKILL to child and wait till he exits\n");
+      printf(1, "send SIGKILL to child (with pid %d) and wait till he exits\n", pid);
       if(kill(pid, SIGKILL) < 0){
         printf(1, "kill failed\n");
         exit();
