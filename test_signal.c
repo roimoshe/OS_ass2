@@ -28,7 +28,7 @@ main(int argc, char *argv[])
     printf(1, ">>>TEST SIGSTOP/SIGCONT<<<\n");
     pid = fork();
     if (pid == 0){ //child
-      for(int i = 0; i < number_of_iterations*100; i++){
+      for(int i = 0; i < number_of_iterations*100000; i++){
         printf(1, "child: %d\n", i);
       }
       exit();
