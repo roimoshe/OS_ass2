@@ -690,21 +690,9 @@ void handle_kernel_level_signals(int signum){
   // TODO: handle case when cont & stop are set together
   struct proc *p = myproc();
   if(signum == SIGSTOP){
-    pushcli();
-    while(!cas(&p->state,RUNNING,RUNNABLE)){
-      if(p->state==RUNNABLE)
-        break;
-    }
-    popcli();
     while( !got_sig_cont() ){
       yield();
     }
-  } else if(signum != SIGCONT) {
-    //exit();
-    // p->killed = 1;
-    // if(p->state == SLEEPING){
-    //   p->state = RUNNABLE;
-    // }
   }
 }
 
