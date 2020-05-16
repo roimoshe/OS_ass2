@@ -38,11 +38,13 @@ main(int argc, char *argv[])
       }
       printf(1, "send SIGSTOP to child\n");
       kill(pid, SIGSTOP);
+      sleep(10);
       for(int i = number_of_iterations; i < 2*number_of_iterations; i++){
         printf(1, "parent: %d\n", i);
       }
       printf(1, "send SIGCONT to child\n");
       kill(pid, SIGCONT);
+      sleep(10);
       for(int i = 2*number_of_iterations; i < 3*number_of_iterations; i++){
         printf(1, "parent: %d\n", i);
       }
@@ -51,6 +53,7 @@ main(int argc, char *argv[])
         printf(1, "kill failed\n");
         exit();
       }
+      sleep(10);
       wait();
       printf(1, ">>>SIGSTOP/SIGCONT PASS<<<\n");
     }

@@ -295,7 +295,7 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
-  cprintf("roi: pid %d exits", pid);
+  cprintf("roi: pid %d exits\n", pid);
   sched();
   panic("zombie exit");
 }
