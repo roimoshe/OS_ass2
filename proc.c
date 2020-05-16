@@ -509,22 +509,19 @@ kill(int pid, int signum)
   if(signum > 31 || signum < 0){
     return -1;
   }
-  acquire(&ptable.lock);
+
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){//TODOroi: maybe check the proc state
       p->pending_signals|=(1<<signum);
       if( signum == SIGKILL || (int)p->signal_handlers[signum].sa_handler == SIGKILL ||
        ((int)p->signal_handlers[signum].sa_handler == SIGDFL && signum != SIGSTOP && signum != SIGCONT ) ){
         p->killed = 1;
-        if(p->state == SLEEPING){ // TODO: maybe do it for signals that it's handles is kill, also handle them
-          p->state = RUNNABLE;
-        }
+        cas(&p->state, SLEEPING, RUNNABLE);
       }
-      release(&ptable.lock);
       return 0;
     }
   }
-  release(&ptable.lock);
+
   return -1;
 }
 
