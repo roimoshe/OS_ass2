@@ -620,6 +620,7 @@ int got_sig_cont(){
     if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       if ( (int)curr_sa_handler == SIGCONT || i == SIGCONT){
+        cprintf("got_sig_cont returns 1");
         return 1;
       }
     }
@@ -629,18 +630,12 @@ int got_sig_cont(){
 
 void handle_kernel_level_signals(int signum){
   // TODO: handle case when cont & stop are set together
-  struct proc *p = myproc();
+  cprintf("in handle_kernel_level_signals\n");
   if(signum == SIGSTOP){
-    p->state = RUNNABLE;
     while( !got_sig_cont() ){
+      // cprintf("in stop loop");
       yield();
     }
-  } else if(signum != SIGCONT) {
-    //exit();
-    // p->killed = 1;
-    // if(p->state == SLEEPING){
-    //   p->state = RUNNABLE;
-    // }
   }
 }
 
