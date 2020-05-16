@@ -92,7 +92,7 @@ allocproc(void)
   pushcli();
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(cas(&p->state, UNUSED, EMBRYO)
+    if(cas(&p->state, UNUSED, EMBRYO))
       goto found;
 
   //release(&ptable.lock);
