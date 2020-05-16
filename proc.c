@@ -14,7 +14,6 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
-int lock_ptable = 0;
 extern void forkret(void);
 extern void trapret(void);
 
@@ -91,21 +90,17 @@ allocproc(void)
 
   //acquire(&ptable.lock);
   pushcli();
-  while (!cas(&lock_ptable, 0 , 1)){};
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == UNUSED)
+    if(cas(&p->state, UNUSED, EMBRYO)
       goto found;
 
   //release(&ptable.lock);
-  lock_ptable = 0;
   popcli();
   return 0;
 
 found:
-  p->state = EMBRYO;
   //release(&ptable.lock);
-  lock_ptable = 0;
   popcli();
 
 
