@@ -262,7 +262,7 @@ exit(void)
   // cprintf("\npending_signals: %x, sys_exit...\n", curproc->pending_signals);
   struct proc *p;
   int fd;
-
+  int pid = curproc->pid;
   if(curproc == initproc)
     panic("init exiting");
 
@@ -295,6 +295,7 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  cprintf("roi: pid %d exits", pid);
   sched();
   panic("zombie exit");
 }
