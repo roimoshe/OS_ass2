@@ -47,7 +47,10 @@ main(int argc, char *argv[])
         printf(1, "parent: %d\n", i);
       }
       printf(1, "send SIGKILL to child and wait till he exits\n");
-      kill(pid, SIGKILL);
+      if(kill(pid, SIGKILL)<0){
+        printf("kill failed\n");
+        exit();
+      }
       wait();
       printf(1, ">>>SIGSTOP/SIGCONT PASS<<<\n");
     }
