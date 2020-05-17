@@ -518,6 +518,35 @@ sleep(void *chan, struct spinlock *lk)
   }
 }
 
+void
+sleep_cas(void *chan)
+{
+  struct proc *p = myproc();
+  
+  if(p == 0)
+    panic("sleep");
+
+  // Must acquire ptable.lock in order to
+  // change p->state and then call sched.
+  // Once we hold ptable.lock, we can be
+  // guaranteed that we won't miss any wakeup
+  // (wakeup runs with ptable.lock locked),
+  // so it's okay to release lk.
+
+  // Go to sleep.
+  pushcli();
+  if(!cas(&p->state, RUNNING, -SLEEPING)){
+    panic("in sleep_cas\n");
+  }
+  p->chan = chan;
+
+  sched();
+
+  // Tidy up.
+  p->chan = 0;
+  popcli();
+}
+
 
 //PAGEBREAK!
 // Wake up all processes sleeping on chan.
