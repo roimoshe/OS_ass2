@@ -159,6 +159,7 @@ end_op(void)
     // and decrementing log.outstanding has decreased
     // the amount of reserved space.
     wakeup(&log);
+    cprintf("in log1\n");
   }
   release(&log.lock);
 
@@ -169,6 +170,7 @@ end_op(void)
     acquire(&log.lock);
     log.committing = 0;
     wakeup(&log);
+    cprintf("in log2\n");
     release(&log.lock);
   }
 }

@@ -221,6 +221,7 @@ consoleintr(int (*getc)(void))
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
           input.w = input.e;
           wakeup(&input.r);
+          cprintf("in console.c\n");
         }
       }
       break;
