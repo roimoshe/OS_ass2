@@ -115,7 +115,9 @@ found:
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
-    cas(&p->state, EMBRYO, UNUSED);
+    if(!cas(&p->state, EMBRYO, UNUSED)){
+	  panic("in allocproc()\n");
+	}
     return 0;
   }
   sp = p->kstack + KSTACKSIZE;
@@ -288,7 +290,9 @@ exit(void)
 
   /*cquire(&ptable.lock);*/
   pushcli();
-  cas(&curproc->state,RUNNING, -ZOMBIE);
+  if(!cas(&curproc->state,RUNNING, -ZOMBIE)){
+  	panic("in exit()\n");
+  }
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
@@ -304,6 +308,7 @@ exit(void)
   }
 
   // Jump into the scheduler, never to return.
+  // curproc->state = ZOMBIE; // now scheduler finish the state change
   sched();
 
   panic("zombie exit");
@@ -327,7 +332,7 @@ wait(void)
       if(p->parent != curproc)
         continue;
       havekids = 1;
-      while(cas(&p->state, -ZOMBIE, ZOMBIE));
+      while(p->state == -ZOMBIE);
       if(cas(&p->state, ZOMBIE, -UNUSED)){
       //if(p->state == ZOMBIE){
         // Found one.
@@ -339,9 +344,11 @@ wait(void)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
-        cas(&p->state,-UNUSED, UNUSED);
+        if(!cas(&p->state,-UNUSED, UNUSED)){
+		  panic("in wait()");
+		}
         /*release(&ptable.lock);*/
-        cas(&curproc->state, -SLEEPING, RUNNING);
+//        cas(&curproc->state, -SLEEPING, RUNNING);
         popcli();
         return pid;
       }
@@ -350,18 +357,13 @@ wait(void)
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
       /*release(&ptable.lock);*/
-      cas(&curproc->state, -SLEEPING, RUNNING);
+//      cas(&curproc->state, -SLEEPING, RUNNING);
       popcli();
       return -1;
     }
 
     // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    // sleep(curproc);  //DOC: wait-sleep
-    // instand of calling to sleep:
-    curproc->chan = curproc;
-    sched();
-    // Tidy up.
-    curproc->chan = 0;
+    sleep_cas(curproc);  //DOC: wait-sleep
   }
 }
 
@@ -496,32 +498,26 @@ sleep(void *chan, struct spinlock *lk)
   // guaranteed that we won't miss any wakeup
   // (wakeup runs with ptable.lock locked),
   // so it's okay to release lk.
-  //if(lk != &ptable.lock){  //DOC: sleeplock0
-  //  /*acquire(&ptable.lock);  //DOC: sleeplock1*/
-  //  release(lk);
-  //}
-  pushcli();
-  release(lk);
+  if(lk != &ptable.lock){  //DOC: sleeplock0
+    acquire(&ptable.lock);  //DOC: sleeplock1
+    release(lk);
+  }
   // Go to sleep.
   p->chan = chan;
-  /*p->state = SLEEPING;*/
-  if(!cas(&p->state,RUNNING,-SLEEPING)){
-    panic("inside sleep - cant change state to -sleeping");
-  }
-  sched();
+  p->state = SLEEPING;
 
+  sched();
 
   // Tidy up.
   p->chan = 0;
-  popcli();
-  acquire(lk);
 
   // Reacquire original lock.
-  /*if(lk != &ptable.lock){  //DOC: sleeplock2
+  if(lk != &ptable.lock){  //DOC: sleeplock2
     release(&ptable.lock);
     acquire(lk);
-  }*/
+  }
 }
+
 
 //PAGEBREAK!
 // Wake up all processes sleeping on chan.
