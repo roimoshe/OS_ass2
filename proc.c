@@ -345,8 +345,8 @@ wait(void)
         p->name[0] = 0;
         p->killed = 0;
         if(!cas(&p->state,-UNUSED, UNUSED)){
-		  panic("in wait()");
-		}
+      panic("in wait()");
+    }
         /*release(&ptable.lock);*/
         popcli();
         return pid;
@@ -394,7 +394,9 @@ scheduler(void)
       if(!cas(&p->state,RUNNABLE, -RUNNING)){
         if(p->state != UNUSED){
           tmp++;
-          // cprintf("state of curr examined proc is: %d, tmp = %d, its name: %s\n", p->state, tmp, p->name);
+          // cprintf("nextpid = %d\n", nextpid);
+          // cprintf("ptable.proc = %x, struct proc size is %d\n", ptable.proc, sizeof(struct proc));
+          // cprintf("state : %d, tmp = %d, its channel is: %x, its name: %s, pid: %d\n", p->state, tmp, p->chan, p->name, p->pid);
         }
         continue;
       }
@@ -412,10 +414,12 @@ scheduler(void)
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
-      cas(&p->state, -ZOMBIE, ZOMBIE);  
+      cas(&p->state, -ZOMBIE, ZOMBIE);
       cas(&p->state, -RUNNABLE, RUNNABLE);
       cas(&p->state, -SLEEPING, SLEEPING);
-
+      if(p->state == RUNNING){
+        panic("proc come back to scheduler with RUNNING state!!\n");
+      }
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
@@ -550,7 +554,6 @@ wakeup1(void *chan)
 void
 wakeup(void *chan)
 {
-  // cprintf("in wakeup\n");
   /*acquire(&ptable.lock);*/
   pushcli();
   wakeup1(chan);

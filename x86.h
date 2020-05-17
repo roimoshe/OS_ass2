@@ -148,19 +148,19 @@ lcr3(uint val)
 
 static inline int 
 //TODO: delete old cas:
-/*cas(volatile void *addr, int expected, int newval){
-    int output;
-    asm volatile (
-            "lock; cmpxchg %3, %1\n\t"
-            "pushfl\n\t"
-            "popl %%ecx\n\t"
-            "andl $0x0040, %%ecx\n\t"
-            "shrl $6, %%ecx\n\t"
-            "movl %%ecx, %0" : "=r"(output), "+m"(*(int*)addr) , "+a"(expected) : "r"(newval)
-            :"cc", "memory");
+// cas(volatile void *addr, int expected, int newval){
+//     int output;
+//     asm volatile (
+//             "lock; cmpxchg %3, %1\n\t"
+//             "pushfl\n\t"
+//             "popl %%ecx\n\t"
+//             "andl $0x0040, %%ecx\n\t"
+//             "shrl $6, %%ecx\n\t"
+//             "movl %%ecx, %0" : "=r"(output), "+m"(*(int*)addr) , "+a"(expected) : "r"(newval)
+//             :"cc", "memory");
 
-    return output;
-}*/
+//     return output;
+// }
 cas(volatile void *addr, int expected, int newval){
     unsigned char sucssed;
     asm volatile (

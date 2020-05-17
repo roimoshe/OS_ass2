@@ -122,7 +122,6 @@ ideintr(void)
   b->flags |= B_VALID;
   b->flags &= ~B_DIRTY;
   wakeup(b);
-  cprintf("in ide.c\n");
 
   // Start disk on next buf in queue.
   if(idequeue != 0)
