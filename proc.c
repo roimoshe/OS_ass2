@@ -273,7 +273,9 @@ exit(void)
   end_op();
   curproc->cwd = 0;
 
-  acquire(&ptable.lock);
+  // acquire(&ptable.lock);
+  pushcli();
+  while(!cas(&curproc->state, RUNNING, -ZOMBIE)){ cprintf("stuck in exit.."); }
 
   // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
@@ -288,7 +290,7 @@ exit(void)
   }
 
   // Jump into the scheduler, never to return.
-  curproc->state = ZOMBIE;
+  // curproc->state = ZOMBIE;
   sched();
   panic("zombie exit");
 }
@@ -302,7 +304,7 @@ wait(void)
   int havekids, pid;
   struct proc *curproc = myproc();
   
-  acquire(&ptable.lock);
+  pushcli();
   for(;;){
     // Scan through table looking for exited children.
     havekids = 0;
@@ -310,6 +312,7 @@ wait(void)
       if(p->parent != curproc)
         continue;
       havekids = 1;
+      while(cas(&p->state, -ZOMBIE, -ZOMBIE)){ cprintf("stuck in wait.."); }
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
@@ -321,14 +324,15 @@ wait(void)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
-        release(&ptable.lock);
+        // release(&ptable.lock);
+        popcli();
         return pid;
       }
     }
 
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
-      release(&ptable.lock);
+      popcli();
       return -1;
     }
 
@@ -370,14 +374,17 @@ scheduler(void)
       p->state = RUNNING;
 
       swtch(&(c->scheduler), p->context);
+      cas(&p->state, -SLEEPING, SLEEPING);
+      cas(&p->state, -ZOMBIE, ZOMBIE);
       switchkvm();
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
     }
-    release(&ptable.lock);
-
+    if(holding(&ptable.lock)){
+      release(&ptable.lock);
+    }
   }
 }
 
@@ -394,8 +401,8 @@ sched(void)
   int intena;
   struct proc *p = myproc();
 
-  if(!holding(&ptable.lock))
-    panic("sched ptable.lock");
+  // if(!holding(&ptable.lock))
+  //   panic("sched ptable.lock");
   if(mycpu()->ncli != 1)
     panic("sched locks");
   if(p->state == RUNNING)
@@ -458,12 +465,14 @@ sleep(void *chan, struct spinlock *lk)
   // (wakeup runs with ptable.lock locked),
   // so it's okay to release lk.
   if(lk != &ptable.lock){  //DOC: sleeplock0
-    acquire(&ptable.lock);  //DOC: sleeplock1
+    // acquire(&ptable.lock);  //DOC: sleeplock1
     release(lk);
   }
   // Go to sleep.
+  pushcli();
   p->chan = chan;
-  p->state = SLEEPING;
+  while(!cas(&p->state, RUNNING, -SLEEPING)){ cprintf("stuck in sleep.."); }
+  // p->state = SLEEPING;
 
   sched();
 
@@ -472,9 +481,10 @@ sleep(void *chan, struct spinlock *lk)
 
   // Reacquire original lock.
   if(lk != &ptable.lock){  //DOC: sleeplock2
-    release(&ptable.lock);
+    // release(&ptable.lock);
     acquire(lk);
   }
+  popcli();
 }
 
 //PAGEBREAK!
