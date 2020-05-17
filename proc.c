@@ -90,17 +90,21 @@ allocproc(void)
   struct proc *p;
   char *sp;
 
+  //acquire(&ptable.lock);
   pushcli();
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(cas(&p->state, UNUSED, EMBRYO))
+    if(cas(&p->state ,UNUSED, EMBRYO))
       goto found;
 
+  //release(&ptable.lock)
   popcli();
   return 0;
 
 found:
+ 
   popcli();
+
 
   p->pid = allocpid();
   for (int i = 0; i<32; i++){
@@ -167,11 +171,15 @@ userinit(void)
   // run this process. the acquire forces the above
   // writes to be visible, and the lock is also needed
   // because the assignment might not be atomic.
+  /*acquire(&ptable.lock);*/
   pushcli();
-  if(!cas(&p->state, EMBRYO, RUNNABLE)){
-    panic("userinit panic, state isnt embryo\n");
+  //TODO: check if needed an error catch or loop
+  if(!cas(&p->state, EMBRYO , RUNNABLE))
+  {
+    panic("inside user-init failure!");
   }
   popcli();
+  /*release(&ptable.lock);*/
 }
 
 // Grow current process's memory by n bytes.
@@ -238,8 +246,10 @@ fork(void)
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
+
+ /*acquire(&ptable.lock);*/
   pushcli();
-  if(!cas(&np->state, EMBRYO, RUNNABLE)){
+  if(!cas(&np->state, EMBRYO , RUNNABLE)){
     panic("userinit panic, state isnt embryo\n");
   }
   popcli();
@@ -284,6 +294,7 @@ exit(void)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
       p->parent = initproc;
+      while(p->state==-ZOMBIE){};
       if(p->state == ZOMBIE)
         wakeup1(initproc);
     }
@@ -292,6 +303,7 @@ exit(void)
   // Jump into the scheduler, never to return.
   // curproc->state = ZOMBIE;
   sched();
+
   panic("zombie exit");
 }
 
@@ -304,6 +316,7 @@ wait(void)
   int havekids, pid;
   struct proc *curproc = myproc();
   
+  /*acquire(&ptable.lock);*/
   pushcli();
   for(;;){
     // Scan through table looking for exited children.
