@@ -630,10 +630,10 @@ int got_sig_cont(){
 
 void handle_kernel_level_signals(int signum){
   // TODO: handle case when cont & stop are set together
-  cprintf("in handle_kernel_level_signals\n");
+  cprintf("in handle_kernel_level_signals, my pid = %d, my parent pid = %d\n", myproc()->pid, myproc()->parent->pid);
   if(signum == SIGSTOP){
     while( !got_sig_cont() ){
-      // cprintf("in stop loop");
+      // cprintf("parent state is %d\n", myproc()->parent->state);
       yield();
     }
   }

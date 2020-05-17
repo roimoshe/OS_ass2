@@ -6,7 +6,7 @@
 int
 main(int argc, char *argv[])
 {
-  for (int i = 0; i<10; i++){
+  for (int i = 0; i<50; i++){
     int number_of_iterations = 50;
     int pid = fork();
     if (pid == 0){ //child
@@ -46,6 +46,6 @@ main(int argc, char *argv[])
       printf(1, ">>>SIGSTOP/SIGCONT PASS<<<\n");
     }
   }
-
+  printf(1, ">>>PASS ALL<<<\n");
   exit();
 }
