@@ -76,7 +76,7 @@ allocpid(void)
   old = nextpid;
   }while (!cas(&nextpid, old , old +1));
   popcli();
-  return old +1;
+  return old + 1;
 }
 
 //PAGEBREAK: 32
@@ -109,6 +109,7 @@ found:
   p->pid = allocpid();
   for (int i = 0; i<32; i++){
     p->signal_handlers[i].sa_handler = SIGDFL;
+    p->signal_handlers[i].sigmask = 0;
   }
   p->pending_signals = 0;
   p->signal_mask = 0;
@@ -326,6 +327,9 @@ wait(void)
   /*acquire(&ptable.lock);*/
   pushcli();
   for(;;){
+    if(!cas(&curproc->state, RUNNING, -SLEEPING)){
+      panic("in wait()1\n");
+    }
     // Scan through table looking for exited children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -345,7 +349,10 @@ wait(void)
         p->name[0] = 0;
         p->killed = 0;
         if(!cas(&p->state,-UNUSED, UNUSED)){
-          panic("in wait()");
+          panic("in wait()2");
+        }
+        if(!cas(&curproc->state, RUNNING, -SLEEPING)){
+          panic("in wait()3\n");
         }
         /*release(&ptable.lock);*/
         popcli();
@@ -356,8 +363,8 @@ wait(void)
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
       /*release(&ptable.lock);*/
-      if(curproc->state == -SLEEPING){
-        panic("state in -SLEEPING in wait, weird!!\n");
+      if(!cas(&curproc->state, RUNNING, -SLEEPING)){
+          panic("in wait()4\n");
       }
       popcli();
       return -1;
@@ -510,6 +517,9 @@ sleep(void *chan, struct spinlock *lk)
     cprintf("someone called sleep with a lock\n");
     release(lk);
     pushcli();
+    if( !cas(&p->state, RUNNING, -SLEEPING) ){
+      panic("in sleep, with lock\n");
+    }
   } else{
     cprintf("someone called sleep without a lock\n");
   }
@@ -521,9 +531,6 @@ sleep(void *chan, struct spinlock *lk)
   // so it's okay to release lk.
 
   // Go to sleep.
-  if(!cas(&p->state, RUNNING, -SLEEPING)){
-    panic("in sleep\n");
-  }
   // p->state = -SLEEPING;
   p->chan = chan;
 
@@ -531,9 +538,10 @@ sleep(void *chan, struct spinlock *lk)
   cprintf("after sched in sleeping\n");
   // Tidy up.
   p->chan = 0;
-  popcli();
-  if(lk != null)
+  if(lk != null){
+    popcli();
     acquire(lk);
+  }
 }
 
 
@@ -545,7 +553,7 @@ wakeup1(void *chan)
 {
   struct proc *p;
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->chan == chan)
     {
       while(p->state == -SLEEPING){ cprintf("stuck in busy wait in wakeup1\n"); }
@@ -553,6 +561,7 @@ wakeup1(void *chan)
         panic("wakeup1 called, but process is already wakedup");
       }
     }
+  }
 }
 
 // Wake up all processes sleeping on chan.
@@ -581,13 +590,13 @@ kill(int pid, int signum)
   pushcli();
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){//TODOroi: maybe check the proc state
-      p->pending_signals|=(1<<signum);
+      while(!cas(&p->pending_signals, p->pending_signals, p->pending_signals | (1<<signum))){ cprintf("in kill()\n"); }
       if( signum == SIGKILL || (int)p->signal_handlers[signum].sa_handler == SIGKILL ||
        ((int)p->signal_handlers[signum].sa_handler == SIGDFL && signum != SIGSTOP && signum != SIGCONT ) ){
         p->killed = 1;
         while(p->state == -SLEEPING){ cprintf("stuck in busy wait in exit\n"); }
         cas(&p->state,SLEEPING,RUNNABLE);
-        if(p->state == SLEEPING || p->state != -SLEEPING){
+        if(p->state == SLEEPING || p->state == -SLEEPING){
           panic("in kill, the famous tail bound\n");
         }
       }
@@ -734,6 +743,10 @@ void pending_signals_handler(void)
   if(curproc == 0){
     return;
   }
+  if((curproc->tf->cs & 3) != 3){
+    return;
+  }
+  cprintf("in pending_signals_handler()\n");
   for (int i=0; i<32; i++) {
     // calculae current vars; TODO: SIGCONT can be mask
     bit_i_is_unmaskable = (i == SIGSTOP || i == SIGCONT || i == SIGKILL);
@@ -741,6 +754,7 @@ void pending_signals_handler(void)
     sig_i_is_pending_and_unmasked = sig_i_is_pending & (~curproc->signal_mask);
 
     if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
+      cprintf("found signal to handle\n");
       // current handler
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
