@@ -174,7 +174,7 @@ lcr3(uint val)
 //     return sucssed;   // ZF result, 1 on success else 0
 // }
 
-// zimer's cas
+// zimer's cas TODO: change
 static inline int 
 cas(volatile void *addr, int expected, int newval){
   int output;

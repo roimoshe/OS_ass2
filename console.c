@@ -221,7 +221,6 @@ consoleintr(int (*getc)(void))
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
           input.w = input.e;
           wakeup(&input.r);
-          cprintf("in console.c\n");
         }
       }
       break;
@@ -238,9 +237,9 @@ consoleread(struct inode *ip, char *dst, int n)
 {
   uint target;
   int c;
-
   iunlock(ip);
   target = n;
+// TODOroi: bardak
   acquire(&cons.lock);
   while(n > 0){
     while(input.r == input.w){
@@ -250,6 +249,7 @@ consoleread(struct inode *ip, char *dst, int n)
         return -1;
       }
       sleep(&input.r, &cons.lock);
+      // cprintf("rrrrrrrrr------------\n");
     }
     c = input.buf[input.r++ % INPUT_BUF];
     if(c == C('D')){  // EOF
