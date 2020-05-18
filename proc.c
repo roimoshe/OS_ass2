@@ -557,9 +557,7 @@ wakeup1(void *chan)
     if(p->chan == chan)
     {
       while(p->state == -SLEEPING){ cprintf("stuck in busy wait in wakeup1\n"); }
-      if(!cas(&p->state, SLEEPING, RUNNABLE)){
-        panic("wakeup1 called, but process is already wakedup");
-      }
+      cas(&p->state, SLEEPING, RUNNABLE);
     }
   }
 }
