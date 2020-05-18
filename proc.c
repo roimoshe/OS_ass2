@@ -13,7 +13,7 @@ struct {
 
 static struct proc *initproc;
 
-int nextpid = 1;
+static volatile int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
 
@@ -291,7 +291,7 @@ exit(void)
   /*cquire(&ptable.lock);*/
   pushcli();
   if(!cas(&curproc->state,RUNNING, -ZOMBIE)){
-  	panic("in exit()\n");
+    panic("in exit()\n");
   }
 
   // Parent might be sleeping in wait().
@@ -345,8 +345,8 @@ wait(void)
         p->name[0] = 0;
         p->killed = 0;
         if(!cas(&p->state,-UNUSED, UNUSED)){
-      panic("in wait()");
-    }
+          panic("in wait()");
+        }
         /*release(&ptable.lock);*/
         popcli();
         return pid;
@@ -382,18 +382,20 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  int tmp;
+  int tmp = 0;
   for(;;){
     // Enable interrupts on this processor.
     sti();
-    tmp = 0;
     // Loop over process table looking for process to run.
     /*acquire(&ptable.lock);*/
     pushcli();
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      tmp++;
+      if(tmp<500){
+        // procdump();
+      }
       if(!cas(&p->state,RUNNABLE, -RUNNING)){
         if(p->state != UNUSED){
-          tmp++;
           // cprintf("nextpid = %d\n", nextpid);
           // cprintf("ptable.proc = %x, struct proc size is %d\n", ptable.proc, sizeof(struct proc));
           // cprintf("state : %d, tmp = %d, its channel is: %x, its name: %s, pid: %d\n", p->state, tmp, p->chan, p->name, p->pid);
@@ -417,6 +419,9 @@ scheduler(void)
       cas(&p->state, -ZOMBIE, ZOMBIE);
       cas(&p->state, -RUNNABLE, RUNNABLE);
       cas(&p->state, -SLEEPING, SLEEPING);
+      if(p->state < 0){
+        panic("in scheduler, state < 0\n");
+      }
       if(p->state == RUNNING){
         panic("proc come back to scheduler with RUNNING state!!\n");
       }
@@ -504,6 +509,7 @@ sleep(void *chan, struct spinlock *lk)
   if(lk != null){
     cprintf("someone called sleep with a lock\n");
     release(lk);
+    pushcli();
   } else{
     cprintf("someone called sleep without a lock\n");
   }
@@ -515,7 +521,6 @@ sleep(void *chan, struct spinlock *lk)
   // so it's okay to release lk.
 
   // Go to sleep.
-  pushcli();
   if(!cas(&p->state, RUNNING, -SLEEPING)){
     panic("in sleep\n");
   }
@@ -543,7 +548,7 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->chan == chan)
     {
-      while(p->state == -SLEEPING){ /*cprintf("stuck in busy wait in wakeup1\n");*/ }
+      while(p->state == -SLEEPING){ cprintf("stuck in busy wait in wakeup1\n"); }
       if(!cas(&p->state, SLEEPING, RUNNABLE)){
         panic("wakeup1 called, but process is already wakedup");
       }
@@ -621,8 +626,19 @@ procdump(void)
       continue;
     if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
       state = states[p->state];
-    else
+    else if(p->state == -SLEEPING){
+      state = "-sleep";
+    } else if(p->state == -RUNNING){
+      state = "-run";
+    } else if(p->state == -RUNNABLE){
+      state = "-runble";
+    } else if(p->state == -ZOMBIE){
+      state = "-zombie";
+    } else if(p->state == -EMBRYO){
+      state = "-embryo";
+    } else{
       state = "???";
+    }
     cprintf("%d %s %s", p->pid, state, p->name);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
