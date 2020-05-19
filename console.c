@@ -239,7 +239,6 @@ consoleread(struct inode *ip, char *dst, int n)
   int c;
   iunlock(ip);
   target = n;
-// TODOroi: bardak
   acquire(&cons.lock);
   while(n > 0){
     while(input.r == input.w){
@@ -249,7 +248,6 @@ consoleread(struct inode *ip, char *dst, int n)
         return -1;
       }
       sleep(&input.r, &cons.lock);
-      // cprintf("rrrrrrrrr------------\n");
     }
     c = input.buf[input.r++ % INPUT_BUF];
     if(c == C('D')){  // EOF
