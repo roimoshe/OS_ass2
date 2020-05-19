@@ -6,11 +6,11 @@
 int
 main(int argc, char *argv[])
 {
-  int num_of_loops = 1
+  int num_of_loops = 1;
   for (int i = 0; i<num_of_loops; i++){
 
     int pid = fork();
-    
+
     if (pid == 0){ //child
       while(1){
         printf(1, "child still not dead\n");
