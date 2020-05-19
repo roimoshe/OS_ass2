@@ -155,8 +155,8 @@ cas(volatile void *addr, int expected, int newval){
              "  sete %0\n"
              : "=q" (sucssed), [mem] "+m" (*(int*)addr), "+a" (expected)
              : [newval]"r" (newval)
-             : "memory");    // barrier for compiler reordering around this
-     return sucssed;   // ZF result, 1 on success else 0
+             : "memory");    // cmd: barrier for compiler reordering around this
+     return sucssed;   // sucssed contain ZF result, 1 on success else 0
  }
 
 
