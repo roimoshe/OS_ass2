@@ -416,9 +416,9 @@ scheduler(void)
       if(p->state < 0){
         panic("in scheduler, state < 0\n");
       }
-      if(p->state == RUNNING){
+      /*if(p->state == RUNNING){
         panic("proc come back to scheduler with RUNNING state!!\n");
-      }
+      }*/
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;

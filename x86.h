@@ -161,21 +161,23 @@ lcr3(uint val)
 
 //     return output;
 // }
-// static inline int 
-// cas(volatile void *addr, int expected, int newval){
-//     unsigned char sucssed;
-//     asm volatile (
-//             "  lock\n"
-//             "  cmpxchgl %[newval], %[mem]\n"
-//             "  sete %0\n"
-//             : "=q" (sucssed), [mem] "+m" (*(int*)addr), "+a" (expected)
-//             : [newval]"r" (newval)
-//             : "memory");    // barrier for compiler reordering around this
-//     return sucssed;   // ZF result, 1 on success else 0
-// }
+
+static inline int 
+cas(volatile void *addr, int expected, int newval){
+     unsigned char sucssed;
+     asm volatile (
+             "  lock\n"
+             "  cmpxchgl %[newval], %[mem]\n"
+             "  sete %0\n"
+             : "=q" (sucssed), [mem] "+m" (*(int*)addr), "+a" (expected)
+             : [newval]"r" (newval)
+             : "memory");    // barrier for compiler reordering around this
+     return sucssed;   // ZF result, 1 on success else 0
+ }
+
 
 // zimer's cas TODO: change
-static inline int 
+/*static inline int 
 cas(volatile void *addr, int expected, int newval){
   int output;
     asm volatile (
@@ -190,7 +192,9 @@ cas(volatile void *addr, int expected, int newval){
             : "memory");
 
   return output;
-}
+}*/
+
+
 //PAGEBREAK: 36
 // Layout of the trap frame built on the stack by the
 // hardware and by trapasm.S, and passed to trap().
