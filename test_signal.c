@@ -6,7 +6,7 @@
 int
 main(int argc, char *argv[])
 {
-  int num_of_loops = 1;
+  int num_of_loops = 10;
   for (int i = 0; i<num_of_loops; i++){
 
     int pid = fork();

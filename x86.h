@@ -146,22 +146,6 @@ lcr3(uint val)
   asm volatile("movl %0,%%cr3" : : "r" (val));
 }
 
-// static inline int 
-//TODO: delete old cas:
-// cas(volatile void *addr, int expected, int newval){
-//     int output;
-//     asm volatile (
-//             "lock; cmpxchg %3, %1\n\t"
-//             "pushfl\n\t"
-//             "popl %%ecx\n\t"
-//             "andl $0x0040, %%ecx\n\t"
-//             "shrl $6, %%ecx\n\t"
-//             "movl %%ecx, %0" : "=r"(output), "+m"(*(int*)addr) , "+a"(expected) : "r"(newval)
-//             :"cc", "memory");
-
-//     return output;
-// }
-
 static inline int 
 cas(volatile void *addr, int expected, int newval){
      unsigned char sucssed;
@@ -174,25 +158,6 @@ cas(volatile void *addr, int expected, int newval){
              : "memory");    // barrier for compiler reordering around this
      return sucssed;   // ZF result, 1 on success else 0
  }
-
-
-// zimer's cas TODO: change
-/*static inline int 
-cas(volatile void *addr, int expected, int newval){
-  int output;
-    asm volatile (
-            "lock; cmpxchg %3, %1\n\t"
-            "pushfl\n\t"
-            "popl %%eax\n\t"
-            "andl $0x0040, %%eax\n\t"
-            "shrl $6, %%eax\n\t"
-            "movl %%eax, %0" 
-            : "=r"(output), "+m"(*(int*)addr) , "+a"(expected) 
-            : "r"(newval)
-            : "memory");
-
-  return output;
-}*/
 
 
 //PAGEBREAK: 36
