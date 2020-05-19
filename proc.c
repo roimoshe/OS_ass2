@@ -176,7 +176,6 @@ userinit(void)
   // because the assignment might not be atomic.
   /*acquire(&ptable.lock);*/
   pushcli();
-  //TODO: check if needed an error catch or loop
   if(!cas(&p->state, EMBRYO , RUNNABLE))
   {
     panic("inside user-init failure!");
@@ -252,7 +251,6 @@ fork(void)
 
  /*acquire(&ptable.lock);*/
   pushcli();
-  //TODO: check if needed an error catch or loop
   if(!cas(&np->state, EMBRYO , RUNNABLE)){
     panic("inside fork- making a proc runnable");
   };
@@ -677,7 +675,6 @@ void handle_user_level_signals(int signum){
 }
 
 int got_sig_cont(){
-  // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
   struct proc *curproc = myproc();
   void (*curr_sa_handler)(int);
   uint bit_i_is_unmaskable, sig_i_is_pending, sig_i_is_pending_and_unmasked;
@@ -699,7 +696,6 @@ int got_sig_cont(){
 }
 
 void handle_kernel_level_signals(int signum){
-  // TODO: handle case when cont & stop are set together
   if(signum == SIGSTOP){
     while( !got_sig_cont() ){
       if(myproc()->killed){
