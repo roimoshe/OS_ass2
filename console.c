@@ -237,6 +237,7 @@ consoleread(struct inode *ip, char *dst, int n)
 {
   uint target;
   int c;
+  
   iunlock(ip);
   target = n;
   acquire(&cons.lock);
