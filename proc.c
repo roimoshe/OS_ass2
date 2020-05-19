@@ -294,7 +294,6 @@ exit(void)
   if(!cas(&curproc->state,RUNNING, -ZOMBIE)){
     panic("in exit()\n");
   }
-
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
@@ -519,6 +518,7 @@ sleep(void *chan, struct spinlock *lk)
     panic("sleep");
 
   if(lk != null){
+    p->chan = chan;
     if( !cas(&p->state, RUNNING, -SLEEPING) ){
       panic("in sleep, with lock\n");
     }
@@ -534,7 +534,6 @@ sleep(void *chan, struct spinlock *lk)
 
   // Go to sleep.
   // p->state = -SLEEPING;
-  p->chan = chan;
 
   sched();
   // cprintf("after sched in sleeping\n");
@@ -650,7 +649,7 @@ procdump(void)
     } else{
       state = "???";
     }
-    cprintf("%d %s %s", p->pid, state, p->name);
+    cprintf("%d %s %s ,pending = %x, killed = %d\n", p->pid, state, p->name, p->pending_signals, p->killed);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
@@ -729,7 +728,9 @@ void handle_kernel_level_signals(int signum){
   // TODO: handle case when cont & stop are set together
   if(signum == SIGSTOP){
     while( !got_sig_cont() ){
-      // cprintf("p->killed = %d\n", myproc()->killed);
+      if(myproc()->killed){
+        return;
+      }
       yield();
     }
   }
@@ -750,6 +751,9 @@ void pending_signals_handler(void)
   }
   // procdump();
   for (int i=0; i<32; i++) {
+    if(myproc()->killed){
+      return;
+    }
     // calculae current vars; TODO: SIGCONT can be mask
     bit_i_is_unmaskable = (i == SIGSTOP || i == SIGCONT || i == SIGKILL);
     sig_i_is_pending = ( curproc->pending_signals & (1 << i) );

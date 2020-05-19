@@ -33,7 +33,7 @@ main(int argc, char *argv[])
       } else{
         printf(1, "NACK\n");
       }
-      for(int i = 2*number_of_iterations; i < 3*number_of_iterations; i++){
+      for(int i = 2*number_of_iterations; i < 4*number_of_iterations; i++){
         printf(1, "parent: %d\n", i);
       }
       printf(1, "send SIGKILL to child and wait till he exits ");
@@ -46,6 +46,6 @@ main(int argc, char *argv[])
       printf(1, ">>>SIGSTOP/SIGCONT PASS<<<\n");
     }
   }
-
+  printf(1, ">>>ALL PASS<<<\n");
   exit();
 }
