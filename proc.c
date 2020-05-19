@@ -729,7 +729,7 @@ void handle_kernel_level_signals(int signum){
   // TODO: handle case when cont & stop are set together
   if(signum == SIGSTOP){
     while( !got_sig_cont() ){
-      /*cprintf("stuck in busy wait in handle_kernel_level_signals\n");*/
+      // cprintf("p->killed = %d\n", myproc()->killed);
       yield();
     }
   }

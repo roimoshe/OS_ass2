@@ -59,11 +59,11 @@ struct proc {
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
   void *chan;                  // If non-zero, sleeping on chan
-  int killed;                  // If non-zero, have been killed
+  volatile int killed;                  // If non-zero, have been killed
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  uint pending_signals;
+  volatile uint pending_signals;
   uint signal_mask;
   struct sigaction signal_handlers[32];
   struct trapframe user_tf_backup;
