@@ -6,7 +6,7 @@
 int
 main(int argc, char *argv[])
 {
-  int num_of_loops = 10;
+  int num_of_loops = 3;
   for (int i = 0; i<num_of_loops; i++){
 
     int pid = fork();
@@ -21,35 +21,20 @@ main(int argc, char *argv[])
       sleep(5);
     
       printf(1, "send SIGSTOP to child ");
-      if(kill(pid, SIGSTOP) == 0){
-        printf(1, "ACK\n");
-      } else{
-        printf(1, "NACK\n");
-      }
+      kill(pid, SIGSTOP);
+
       sleep(5);
 
-      printf(1, "send SIGCONT to child ");
-      if(kill(pid, SIGCONT) == 0){
-        printf(1, "ACK\n");
-      } else{
-        printf(1, "NACK\n");
-      }
+      kill(pid, SIGCONT);
 
-      printf(1, "send onther SIGCONT to child  (unused)");
-      if(kill(pid, SIGCONT) == 0){
-        printf(1, "ACK\n");
-      } else{
-        printf(1, "NACK\n");
-      }
+      // send onther SIGCONT to child  (unused)
+      kill(pid, SIGCONT);
 
-      printf(1, "send SIGKILL to child and wait till he exits ");
-      if(kill(pid, SIGKILL) == 0){
-        printf(1, "ACK\n");
-      } else{
-        printf(1, "NACK\n");
-      }
+
+      kill(pid, SIGKILL);
 
       wait();
+      printf(1, "child still not dead\n");
       printf(1, ">>>SIGSTOP/SIGCONT PASS<<<\n");
     }
   }

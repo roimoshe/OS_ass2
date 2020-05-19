@@ -29,7 +29,6 @@ main(int argc, char *argv[])
   if (pid < 0){
     printf(1, "error in fork!\n");
     exit();
-    exit();
   } else if (pid == 0){ //child
     while(keep_running && iter_num < number_of_iterations){
       printf(1, "childID %d is running, waiting for SIG_TEST.\n", pid);
