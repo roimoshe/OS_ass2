@@ -21,7 +21,7 @@ callback_for_SIG_TEST(int signum){
   write(1, &c, 1);
   keep_running = 0;
 }
-
+/*
 int
 main(int argc, char *argv[])
 {
@@ -64,7 +64,7 @@ main(int argc, char *argv[])
   }
   exit();
 }
-
+*/
 ////////////////////////////////////////////////////////////
 //TODO: remove these tests:
 
@@ -402,7 +402,7 @@ void testmask2(){
         printf(1,"testmask2-finish\n");
     }
 }
-/*
+
 int main(int argc, char *argv[])
 {
     sleep(80);
@@ -433,4 +433,4 @@ int main(int argc, char *argv[])
      printf(1, "-----------------------\n");
       testmask2();
     exit();
-}*/
+}

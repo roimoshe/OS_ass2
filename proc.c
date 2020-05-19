@@ -690,6 +690,12 @@ int got_sig_cont(){
       if ( (int)curr_sa_handler == SIGCONT || i == SIGCONT){
         return 1;
       }
+      else if ((int)curr_sa_handler != SIGIGN){
+        curproc->sig_mask_backup = curproc->signal_mask;
+        curproc->signal_mask = curproc->signal_handlers[i].sigmask;
+        handle_user_level_signals(i);
+        return 1;
+      }
     }
   }
   return 0;
