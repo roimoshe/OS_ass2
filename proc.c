@@ -269,7 +269,6 @@ void
 exit(void)
 {
   struct proc *curproc = myproc();
-  // cprintf("\npending_signals: %x, sys_exit...\n", curproc->pending_signals);
   struct proc *p;
   int fd;
 
@@ -298,7 +297,7 @@ exit(void)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
       p->parent = initproc;
-      while(p->state==-ZOMBIE){ /*cprintf("stuck in busy wait in exit\n"); */};
+      while(p->state==-ZOMBIE){};
       if(p->state == ZOMBIE)
         wakeup1(initproc);
     }
@@ -319,7 +318,6 @@ wait(void)
   struct proc *p;
   int havekids, pid;
   struct proc *curproc = myproc();
-  // cprintf("in wait()..--------\n");
   /*acquire(&ptable.lock);*/
   pushcli();
   for(;;){
@@ -333,7 +331,7 @@ wait(void)
       if(p->parent != curproc)
         continue;
       havekids = 1;
-      while(p->state == -ZOMBIE){ /*cprintf("stuck in busy wait in exit\n");*/ }
+      while(p->state == -ZOMBIE){}
       if(cas(&p->state, ZOMBIE, -UNUSED)){
       //if(p->state == ZOMBIE){
         // Found one.
@@ -388,7 +386,6 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  int tmp = 0;
   for(;;){
     // Enable interrupts on this processor.
     sti();
@@ -396,19 +393,9 @@ scheduler(void)
     /*acquire(&ptable.lock);*/
     pushcli();
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      tmp++;
-      if(tmp<500){
-        // procdump();
-      }
       if(!cas(&p->state,RUNNABLE, -RUNNING)){
-        if(p->state != UNUSED){
-          // cprintf("nextpid = %d\n", nextpid);
-          // cprintf("ptable.proc = %x, struct proc size is %d\n", ptable.proc, sizeof(struct proc));
-          // cprintf("state : %d, tmp = %d, its channel is: %x, its name: %s, pid: %d\n", p->state, tmp, p->chan, p->name, p->pid);
-        }
         continue;
       }
-      // cprintf("found RUNNABLE procces\n");
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -427,9 +414,7 @@ scheduler(void)
         wakeup1(p->parent);
       }
       cas(&p->state, -RUNNABLE, RUNNABLE);
-      if(cas(&p->state, -SLEEPING, SLEEPING)){
-        // cprintf("bingo..:( \n");
-      }
+      cas(&p->state, -SLEEPING, SLEEPING);
       if(p->state < 0){
         panic("in scheduler, state < 0\n");
       }
@@ -455,12 +440,11 @@ scheduler(void)
 void
 sched(void)
 {
-  // cprintf("in sched()\n");
   int intena;
   struct proc *p = myproc();
 
-  /*if(!holding(&ptable.lock))
-    panic("sched ptable.lock");*/
+  // if(!holding(&ptable.lock))
+  //   panic("sched ptable.lock");
   if(mycpu()->ncli != 1)
     panic("sched locks");
   if(p->state == RUNNING)
@@ -512,7 +496,6 @@ void
 sleep(void *chan, struct spinlock *lk)
 {
   struct proc *p = myproc();
-  // cprintf("in sleep() with state: %d -------\n", p->state);
   
   if(p == 0)
     panic("sleep");
@@ -536,13 +519,11 @@ sleep(void *chan, struct spinlock *lk)
   // p->state = -SLEEPING;
 
   sched();
-  // cprintf("after sched in sleeping\n");
   // Tidy up.
   p->chan = 0;
   if(lk != null){
     popcli();
     acquire(lk);
-    // cprintf("before acquire in sleep()--------\n");
   }
 }
 
@@ -558,8 +539,7 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->chan == chan)
     {
-      // cprintf("in wakeup1 found child to wake-------\n");
-      while(p->state == -SLEEPING){ /*cprintf("stuck in busy wait in wakeup1\n");*/ }
+      while(p->state == -SLEEPING){}
       cas(&p->state, SLEEPING, RUNNABLE);
     }
   }
@@ -582,7 +562,6 @@ wakeup(void *chan)
 int
 kill(int pid, int signum)
 {
-  // cprintf("kill() starts..\n");
   struct proc *p;
   if(signum > 31 || signum < 0){
     return -1;
@@ -590,12 +569,12 @@ kill(int pid, int signum)
   /*acquire(&ptable.lock);*/
   pushcli();
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->pid == pid){//TODOroi: maybe check the proc state
-      while(!cas(&p->pending_signals, p->pending_signals, p->pending_signals | (1<<signum))){ /*cprintf("in kill()\n");*/ }
+    if(p->pid == pid){
+      while(!cas(&p->pending_signals, p->pending_signals, p->pending_signals | (1<<signum))){}
       if( signum == SIGKILL || (int)p->signal_handlers[signum].sa_handler == SIGKILL ||
        ((int)p->signal_handlers[signum].sa_handler == SIGDFL && signum != SIGSTOP && signum != SIGCONT ) ){
         p->killed = 1;
-        while(p->state == -SLEEPING){ /*cprintf("stuck in busy wait in exit\n");*/ }
+        while(p->state == -SLEEPING){}
         cas(&p->state,SLEEPING,RUNNABLE);
         if(p->state == SLEEPING || p->state == -SLEEPING){
           panic("in kill, the famous tail bound\n");
@@ -670,7 +649,6 @@ sigprocmask(uint sigmask)
 
 void sigret(void)
 {
-  // cprintf("#### sigret #####\n");
   struct proc *p = myproc();
   p->signal_mask = p->sig_mask_backup;
   memmove((struct trapframe *)p->tf, (struct trapframe *)&p->user_tf_backup, sizeof(struct trapframe));
@@ -683,12 +661,8 @@ void sigret_func(void)
 }
 // TODO: change fuction, it looks like amit&zimer, weird
 void handle_user_level_signals(int signum){
-  // cprintf("\nsigret binary: %x %x %x %x %x\n", *(int *)sigret_func, *(int *)(sigret_func+4), *(int *)(sigret_func+8), *(int *)(sigret_func+12), *(int *)(sigret_func+16));
   struct proc *p = myproc();
-  ///struct context context_for_user_space_sig_handler; //should be in alloc proc
-  //2.4:
   memmove((struct trapframe *)&p->user_tf_backup, (struct trapframe *)p->tf, sizeof(struct trapframe));
-  // p->tf->eip = (uint)p->signal_handlers[signum].sa_handler;
   p->tf->esp -= 16;//need to push 
   memmove((void *)p->tf->esp, sigret_func, 16);
   uint *sigret_add = (uint *)p->tf->esp;
@@ -738,7 +712,6 @@ void handle_kernel_level_signals(int signum){
 
 void pending_signals_handler(void)
 {
-  // TODO: lock the ptable and maybe loop till all signals handled - full loop on unset pending_signals
   struct proc *curproc = myproc();
   void (*curr_sa_handler)(int);
   uint curr_sigmask;
@@ -749,7 +722,6 @@ void pending_signals_handler(void)
   if((curproc->tf->cs & 3) != 3){
     return;
   }
-  // procdump();
   for (int i=0; i<32; i++) {
     if(myproc()->killed){
       return;
@@ -760,8 +732,6 @@ void pending_signals_handler(void)
     sig_i_is_pending_and_unmasked = sig_i_is_pending & (~curproc->signal_mask);
 
     if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
-      // cprintf("found signal to handle\n");
-      // current handler
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
 
