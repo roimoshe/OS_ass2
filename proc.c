@@ -416,9 +416,6 @@ scheduler(void)
       if(p->state < 0){
         panic("in scheduler, state < 0\n");
       }
-      /*if(p->state == RUNNING){
-        panic("proc come back to scheduler with RUNNING state!!\n");
-      }*/
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
@@ -682,18 +679,12 @@ int got_sig_cont(){
     return -1;
   }
   for (int i=0; i<32; i++) {
-    bit_i_is_unmaskable = (i == SIGSTOP || i == SIGCONT || i == SIGKILL);
+    bit_i_is_unmaskable = (i == SIGSTOP || i == SIGKILL);
     sig_i_is_pending = ( curproc->pending_signals & (1 << i) );
     sig_i_is_pending_and_unmasked = sig_i_is_pending & (~curproc->signal_mask);
     if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
-      if ( (int)curr_sa_handler == SIGCONT || i == SIGCONT){
-        return 1;
-      }
-      else if ((int)curr_sa_handler != SIGIGN){
-        curproc->sig_mask_backup = curproc->signal_mask;
-        curproc->signal_mask = curproc->signal_handlers[i].sigmask;
-        handle_user_level_signals(i);
+      if ( (int)curr_sa_handler == SIGCONT || (i == SIGCONT && curr_sa_handler == SIGDFL) ){
         return 1;
       }
     }
@@ -729,33 +720,32 @@ void pending_signals_handler(void)
       return;
     }
     // calculae current vars; TODO: SIGCONT can be mask
-    bit_i_is_unmaskable = (i == SIGSTOP || i == SIGCONT || i == SIGKILL);
+    bit_i_is_unmaskable = (i == SIGSTOP || i == SIGKILL);
     sig_i_is_pending = ( curproc->pending_signals & (1 << i) );
     sig_i_is_pending_and_unmasked = sig_i_is_pending & (~curproc->signal_mask);
 
     if( sig_i_is_pending_and_unmasked || (bit_i_is_unmaskable && sig_i_is_pending) ){
       curr_sa_handler = curproc->signal_handlers[i].sa_handler;
       curr_sigmask = curproc->signal_handlers[i].sigmask;
-
-      if ( (int)curr_sa_handler == SIGDFL ){
+      if((int)curr_sa_handler == SIGKILL){
+        return;
+      } else if ( (int)curr_sa_handler == SIGDFL ){
         handle_kernel_level_signals(i);
-      } 
-      else if ( (int)curr_sa_handler == SIGSTOP || (int)curr_sa_handler == SIGCONT || (int)curr_sa_handler == SIGKILL ){
+      } else if ( (int)curr_sa_handler == SIGSTOP ){
         handle_kernel_level_signals((int)curr_sa_handler);
-      }
-      else if ((int)curr_sa_handler != SIGIGN){ //customize user space signal handler
+      } else if ((int)curr_sa_handler != SIGIGN && (int)curr_sa_handler != SIGCONT ){ //customize user space signal handler
         curproc->sig_mask_backup = curproc->signal_mask;
         curproc->signal_mask = curr_sigmask;
         handle_user_level_signals(i);
       }
-      curproc->pending_signals&= ~(1<<i);
+      while(!cas(&curproc->pending_signals, curproc->pending_signals, curproc->pending_signals & ~(1<<i))){}
     }
   }
 }
 
 int sigaction( int signum, const struct sigaction *act, struct sigaction *oldact ){
   struct sigaction *handler = &myproc()->signal_handlers[signum];
-  if( signum == SIGSTOP || signum == SIGCONT || signum == SIGKILL || signum < 0 || signum > 31 || act == 0){
+  if( signum == SIGSTOP || signum == SIGKILL || signum < 0 || signum > 31 || act == 0){
     oldact = null;
     return -1;
   }
