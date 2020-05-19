@@ -123,6 +123,8 @@ found:
   }
   sp = p->kstack + KSTACKSIZE;
 
+  sp -= sizeof *p->user_tf_backup;
+  p->user_tf_backup = (struct trapframe*)sp;
   // Leave room for trap frame.
   sp -= sizeof *p->tf;
   p->tf = (struct trapframe*)sp;
@@ -496,11 +498,11 @@ sleep(void *chan, struct spinlock *lk)
     panic("sleep");
 
   if(lk != null){
+    pushcli();
     p->chan = chan;
     if( !cas(&p->state, RUNNING, -SLEEPING) ){
       panic("in sleep, with lock\n");
     }
-    pushcli();
     release(lk);
   }
   // Must acquire ptable.lock in order to
@@ -646,7 +648,7 @@ void sigret(void)
 {
   struct proc *p = myproc();
   p->signal_mask = p->sig_mask_backup;
-  memmove((struct trapframe *)p->tf, (struct trapframe *)&p->user_tf_backup, sizeof(struct trapframe));
+  memmove((struct trapframe *)p->tf, (struct trapframe *)p->user_tf_backup, sizeof(struct trapframe));
 }
 
 void sigret_func(void)
@@ -657,7 +659,7 @@ void sigret_func(void)
 // TODO: change fuction, it looks like amit&zimer, weird
 void handle_user_level_signals(int signum){
   struct proc *p = myproc();
-  memmove((struct trapframe *)&p->user_tf_backup, (struct trapframe *)p->tf, sizeof(struct trapframe));
+  memmove((struct trapframe *)p->user_tf_backup, (struct trapframe *)p->tf, sizeof(struct trapframe));
   p->tf->esp -= 16;//need to push 
   memmove((void *)p->tf->esp, sigret_func, 16);
   uint *sigret_add = (uint *)p->tf->esp;
