@@ -656,7 +656,7 @@ void sigret_func(void)
   asm("mov $0x17, %eax\n\t"
       "int $0x40");
 }
-// TODO: change fuction, it looks like amit&zimer, weird
+
 void handle_user_level_signals(int signum){
   struct proc *p = myproc();
   memmove((struct trapframe *)p->user_tf_backup, (struct trapframe *)p->tf, sizeof(struct trapframe));
@@ -721,7 +721,7 @@ void pending_signals_handler(void)
     if(myproc()->killed){
       return;
     }
-    // calculae current vars; TODO: SIGCONT can be mask
+    // calculae current vars; // SIGCONT can be mask
     bit_i_is_unmaskable = (i == SIGSTOP || i == SIGKILL);
     sig_i_is_pending = ( curproc->pending_signals & (1 << i) );
     sig_i_is_pending_and_unmasked = sig_i_is_pending & (~curproc->signal_mask);
